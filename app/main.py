@@ -8,7 +8,7 @@ app = FastAPI()
 @app.get("/ping")
 def get_current_time():
     current_time = datetime.now().isoformat()
-    return { "time": current_time } 
+    return current_time
 
 
 # Run with pyinstaller
@@ -65,4 +65,4 @@ dictConfig(log_config)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", DEFAULT_PORT))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, log_config=log_config)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_config=log_config, reload=True)
