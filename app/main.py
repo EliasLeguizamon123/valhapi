@@ -15,7 +15,7 @@ def get_current_time():
 DEFAULT_PORT = 12358
 
 # Configurar el logger para escribir en un archivo
-log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app.log')
+log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'valhapi.log')
 
 log_config = {
     "version": 1,
@@ -65,4 +65,4 @@ dictConfig(log_config)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", DEFAULT_PORT))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, log_config=log_config, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_config=log_config)
