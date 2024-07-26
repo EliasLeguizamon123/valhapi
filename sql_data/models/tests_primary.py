@@ -5,7 +5,7 @@ from sql_data.config import Base
 class TestPrimary(Base):
     __tablename__ = 'tests_primary'
     
-    test_id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     body_fat = Column(Float)
     bio_impedance = Column(Float)
     visceral_fat = Column(Float)

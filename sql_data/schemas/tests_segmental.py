@@ -2,20 +2,17 @@ from pydantic import BaseModel, condecimal
 from typing_extensions import Annotated
 
 class TestSegmentalBase(BaseModel):
-    test_id: int
     right_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     left_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     right_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     left_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
 
-class TestSegmentalCreate(BaseModel):
-    right_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    left_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    right_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    left_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
+class TestSegmentalCreate(TestSegmentalBase):
+    pass
 
 class TestSegmental(TestSegmentalBase):
+    test_id: int
+
     class Config:
         orm_mode = True
