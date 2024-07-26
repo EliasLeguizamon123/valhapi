@@ -7,4 +7,4 @@ class OperatorSettings(Base):
     measure = Column(String)
     business = Column(String)
     collation = Column(String)
-    company_name = Column(String, max_length=50)
+    company_name = Column(String(60))

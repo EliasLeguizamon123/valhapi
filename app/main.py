@@ -3,7 +3,11 @@ from datetime import datetime
 from logging.config import dictConfig
 import os, uvicorn
 
+from app.routes import members
+
 app = FastAPI()
+
+app.include_router(members.router, prefix="/members")
 
 @app.get("/ping")
 def get_current_time():

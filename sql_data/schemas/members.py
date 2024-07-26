@@ -1,27 +1,28 @@
-from pydantic import BaseModel, constr, conint
-from typing_extensions import Annotated
+from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class MemberBase(BaseModel):
-    id: Annotated[str, constr(max_length=10)]  
-    first_name: Annotated[str, constr(max_length=50)]  
-    last_name: Annotated[str, constr(max_length=50)]  
-    age: Annotated[int, conint(ge=1, le=99)]  
-    gender: Annotated[str, constr(max_length=6)]  
-    height: Annotated[float, conint(ge=0, le=999.9)]
-    weight: Annotated[float, conint(ge=0, le=999.9)]
-    creation_date: datetime  
-    update_date: datetime  
-
+    first_name: str
+    last_name: str
+    age: int
+    gender: str
+    height: float
+    weight: float
 class MemberCreate(BaseModel):
-    id: Annotated[str, constr(max_length=10)]
-    first_name: Annotated[str, constr(max_length=50)]
-    last_name: Annotated[str, constr(max_length=50)]
-    age: Annotated[int, conint(ge=1, le=99)] 
-    gender: Annotated[str, constr(max_length=6)]
-    height: Annotated[float, conint(ge=0, le=999.9)]
-    weight: Annotated[float, conint(ge=0, le=999.9)]
+    id: str
+    first_name: str
+    last_name: str
+    age: int
+    gender: str
+    height: float
+    weight: float
+
 
 class Member(MemberBase):
+    id: str
+    creation_date: datetime
+    update_date: Optional[datetime] = None
+
     class Config:
         orm_mode = True
