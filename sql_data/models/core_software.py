@@ -1,6 +1,7 @@
-from sql_data.config import Base
 from sqlalchemy import Column, String
+from sql_data.config import Base
 
-class CoreSoftware(Base):
-    pin = Column(String, nullable=False, max_length=4)
-    reset_pin = Column(String, nullable=False, max_length=4)
+class CoreSoftwareModel(Base):
+    __tablename__ = 'core_software'
+    pin = Column(String(4), nullable=False)
+    reset_pin = Column(String(4), nullable=False, primary_key=True)
