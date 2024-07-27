@@ -1,5 +1,6 @@
 from pydantic import BaseModel, condecimal
 from typing_extensions import Annotated
+from datetime import datetime
 
 class TestSegmentalBase(BaseModel):
     right_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
@@ -7,6 +8,7 @@ class TestSegmentalBase(BaseModel):
     right_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     left_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
+    creation_date: datetime
 
 class TestSegmentalCreate(TestSegmentalBase):
     pass

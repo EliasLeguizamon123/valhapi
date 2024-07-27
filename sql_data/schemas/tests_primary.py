@@ -11,8 +11,7 @@ class TestPrimaryBase(BaseModel):
     body_water: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     bmi: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     weight: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
-    creation_date: datetime  
-    updated_date: datetime  
+    creation_date: datetime
     member_id: int
 
 class TestPrimaryCreate(TestPrimaryBase):

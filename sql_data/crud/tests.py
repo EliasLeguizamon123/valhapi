@@ -11,9 +11,8 @@ from sql_data.models.tests_segmental import TestSegmental as TestSegmentalModel
 
 from sql_data.models.members import Member
 
-
-def get_all_tests_of_member(db: Session, member_id: Member.id):
-    return db.query(TestPrimaryModel).join(TestEnergyModel).join(TestSegmentalModel).filter(TestPrimaryModel.member_id == member_id).all()
+def get_all_tests_of_member(db: Session, member_id: int):
+    return db.query(TestPrimaryModel).filter(TestPrimaryModel.member_id == member_id).all()
 
 def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestEnergyCreate, test_segmental: TestSegmentalCreate):
     # Crear TestPrimary
@@ -27,7 +26,6 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         bmi=test_primary.bmi,
         weight=test_primary.weight,
         creation_date=test_primary.creation_date,
-        updated_date=test_primary.updated_date,
         member_id=test_primary.member_id
     )
     db.add(db_test_primary)
@@ -42,7 +40,8 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         light_activity=test_energy.light_activity,
         moderate_activity=test_energy.moderate_activity,
         heavy_activity=test_energy.heavy_activity,
-        very_heavy_activity=test_energy.very_heavy_activity
+        very_heavy_activity=test_energy.very_heavy_activity,
+        creation_date=test_primary.creation_date
     )
     db.add(db_test_energy)
     
@@ -53,7 +52,8 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         left_arm=test_segmental.left_arm,
         right_leg=test_segmental.right_leg,
         left_leg=test_segmental.left_leg,
-        torso=test_segmental.torso
+        torso=test_segmental.torso,
+        creation_date=test_primary.creation_date
     )
     db.add(db_test_segmental)
     

@@ -1,19 +1,39 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from logging.config import dictConfig
 import os, uvicorn
 
 from dump import initialize_data
+from sql_data.config import engine, Base
 
-from app.routes import members, core_software
+from app.routes import members, core_software, operator_settings, tests
 
 app = FastAPI()
 
 app.include_router(members.router, prefix="/members")
 app.include_router(core_software.router, prefix="/core_software")
+app.include_router(operator_settings.router, prefix="/operator_settings")
+app.include_router(tests.router, prefix="/tests")
+
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def startup_event():
+    Base.metadata.create_all(bind=engine)
     initialize_data()
 
 @app.get("/ping")
@@ -23,7 +43,7 @@ def get_current_time():
 
 
 # Run with pyinstaller
-DEFAULT_PORT = 12358
+DEFAULT_PORT = 5000
 
 # Configurar el logger para escribir en un archivo
 log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'valhapi.log')
