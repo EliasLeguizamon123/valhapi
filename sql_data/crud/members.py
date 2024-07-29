@@ -25,4 +25,5 @@ def create_member(db: Session, member: MemberCreate):
 def update_member(db: Session, member: MemberCreate):
     db.query(MemberModel).filter(MemberModel.id == member.id).update(member.dict())
     db.commit()
-    return member
+    return db.query(MemberModel).filter(MemberModel.id == member.id).first()
+

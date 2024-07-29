@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime, func
 from sqlalchemy.orm import relationship
 from sql_data.config import Base
 from datetime import datetime
@@ -15,7 +15,7 @@ class TestPrimary(Base):
     body_water = Column(Float)
     bmi = Column(Float)
     weight = Column(Float)
-    creation_date = Column(DateTime, default=datetime.utcnow)
+    creation_date = Column(DateTime, default=func.now())
     member_id = Column(Integer, ForeignKey('members.id'), unique=True, nullable=True)
     
     member = relationship('Member', back_populates='tests')

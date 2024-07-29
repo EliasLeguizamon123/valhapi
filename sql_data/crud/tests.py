@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 
+from datetime import datetime
+
 from sql_data.schemas.tests_primary import TestPrimaryCreate
 from sql_data.models.tests_primary import TestPrimary as TestPrimaryModel
 
@@ -25,8 +27,8 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         body_water=test_primary.body_water,
         bmi=test_primary.bmi,
         weight=test_primary.weight,
-        creation_date=test_primary.creation_date,
-        member_id=test_primary.member_id
+        member_id=test_primary.member_id,
+        creation_date=datetime.utcnow()
     )
     db.add(db_test_primary)
     db.commit()

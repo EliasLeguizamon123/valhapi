@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 from sql_data.config import Base
 from datetime import datetime
@@ -12,6 +12,6 @@ class TestSegmental(Base):
     right_leg = Column(Float)
     left_leg = Column(Float)
     torso = Column(Float)
-    creation_date = Column(DateTime, default=datetime.utcnow)
+    creation_date = Column(DateTime, default=func.now())
     
     test = relationship('TestPrimary', back_populates='segmental')
