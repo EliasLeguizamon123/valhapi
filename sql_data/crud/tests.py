@@ -67,7 +67,9 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         bmi=test_primary.bmi,
         weight=test_primary.weight,
         member_id=test_primary.member_id,
-        creation_date=datetime.utcnow()
+        creation_date=datetime.utcnow(),
+        from_field=test_primary.from_field,
+        by_field=test_primary.by_field
     )
     db.add(db_test_primary)
     db.commit()

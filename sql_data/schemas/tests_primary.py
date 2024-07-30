@@ -15,8 +15,8 @@ class TestPrimaryBase(BaseModel):
     body_water: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     bmi: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     weight: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
-    from_field: Annotated[str, constr(max_length=60)]
-    by_field: Annotated[str, constr(max_length=60)]
+    from_field: Optional[str] = None
+    by_field: Optional[str] = None
 
 class TestPrimaryCreate(TestPrimaryBase):
     creation_date: Optional[datetime] = None
