@@ -7,14 +7,14 @@ class TestSegmentalBase(BaseModel):
     left_arm: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     right_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     left_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    creation_date: datetime
+    torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
 
 class TestSegmentalCreate(TestSegmentalBase):
     pass
 
 class TestSegmental(TestSegmentalBase):
     test_id: int
+    creation_date: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

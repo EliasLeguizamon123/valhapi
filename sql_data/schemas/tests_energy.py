@@ -8,14 +8,14 @@ class TestEnergyBase(BaseModel):
     light_activity: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     moderate_activity: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     heavy_activity: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    very_heavy_activity: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
-    creation_date: datetime
+    very_heavy_activity: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
 
 class TestEnergyCreate(TestEnergyBase):
     pass
 
 class TestEnergy(TestEnergyBase):
     test_id: int
+    creation_date: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

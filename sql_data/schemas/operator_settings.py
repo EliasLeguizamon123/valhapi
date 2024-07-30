@@ -15,4 +15,4 @@ class OperatorSettings(OperatorSettingsBase):
     id: int  # Agregar el campo id
 
     class Config:
-        orm_mode = True
+        from_attributes = True

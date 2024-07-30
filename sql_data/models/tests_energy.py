@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sql_data.config import Base
-from datetime import datetime
+from sqlalchemy.sql import func
 
 class TestEnergy(Base):
     __tablename__ = 'tests_energy'
@@ -13,6 +13,6 @@ class TestEnergy(Base):
     moderate_activity = Column(Float)
     heavy_activity = Column(Float)
     very_heavy_activity = Column(Float)
-    creation_date = Column(DateTime, default=func.now())
+    creation_date = Column(DateTime, server_default=func.now())
     
     test = relationship('TestPrimary', back_populates='energy')

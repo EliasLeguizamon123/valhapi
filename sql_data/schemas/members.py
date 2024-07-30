@@ -25,4 +25,4 @@ class Member(MemberBase):
     update_date: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -10,4 +10,4 @@ class CoreSoftwareCreate(CoreSoftwareBase):
 
 class CoreSoftware(CoreSoftwareBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
