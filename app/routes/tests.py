@@ -44,6 +44,7 @@ def create_member_test(
     db: Session = Depends(get_db)
 ):
     try:
+        # Asignar el member_id del parámetro de ruta al objeto test_primary
         test_primary.member_id = member_id
         test_primary.creation_date = datetime.utcnow()
 
@@ -52,3 +53,4 @@ def create_member_test(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+

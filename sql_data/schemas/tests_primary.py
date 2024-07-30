@@ -1,4 +1,4 @@
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel, condecimal, constr
 from datetime import datetime
 from typing_extensions import Annotated
 from typing import Optional
@@ -14,11 +14,13 @@ class TestPrimaryBase(BaseModel):
     muscle_mass: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     body_water: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
     bmi: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
-    weight: Annotated[float, condecimal(max_digits=5, decimal_places=2)]  
-    member_id: str
+    weight: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
+    from_field: Annotated[str, constr(max_length=60)]
+    by_field: Annotated[str, constr(max_length=60)]
 
 class TestPrimaryCreate(TestPrimaryBase):
     creation_date: Optional[datetime] = None
+    member_id: Optional[str] = None 
     pass
 
 class TestPrimary(TestPrimaryBase):
