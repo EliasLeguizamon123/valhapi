@@ -3,6 +3,10 @@
 ## Description
 Valhapi is an API developed with FastAPI. This project includes instructions for setting up and running the API on a Windows environment.
 
+> [!NOTE]  
+> This project at the moment only have windows support.
+
+
 ## Requirements
 - Python 3.11 or higher
 - Git
@@ -17,7 +21,6 @@ Valhapi is an API developed with FastAPI. This project includes instructions for
 git clone https://github.com/EliasLeguizamon123/valhapi.git
 cd valhapi
 ```
-
 
 ```bash
 python -m venv venv
