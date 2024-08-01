@@ -4,7 +4,7 @@
 Valhapi is an API developed with FastAPI. This project includes instructions for setting up and running the API on a Windows environment.
 
 > [!NOTE]  
-> This project at the moment only have windows support.
+> This project currently only works on Windows OS for the database URL, but Im working on changing this.
 
 
 ## Requirements
@@ -34,4 +34,12 @@ pip install -r requirements.txt | pip install fastapi uvicorn pyinstaller
 ```bash
 uvicorn app.main:app --reload
 
+```
+
+### Docs
+
+Just go to the following URL to see the API documentation:
+
+```bash
+http://127.0.0.1:8000/docs
 ```
