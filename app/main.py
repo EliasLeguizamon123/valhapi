@@ -18,9 +18,8 @@ app.include_router(tests.router, prefix="/tests")
 
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(
@@ -43,7 +42,7 @@ def get_current_time():
 
 
 # Run with pyinstaller
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 8000
 
 # Configurar el logger para escribir en un archivo
 log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'valhapi.log')
