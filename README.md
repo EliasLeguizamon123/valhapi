@@ -42,4 +42,7 @@ Just go to the following URL to see the API documentation:
 
 ```bash
 http://127.0.0.1:8000/docs
+
+pyinstaller --clean --onefile --hidden-import=main --add-data="dump.py:." --icon="logo.ico" --noconsole app/main.py --name valhapi
+
 ```
