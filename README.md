@@ -42,7 +42,12 @@ Just go to the following URL to see the API documentation:
 
 ```bash
 http://127.0.0.1:8000/docs
+```
 
-pyinstaller --clean --onefile --hidden-import=main --add-data="dump.py:." --icon="logo.ico" --noconsole app/main.py --name valhapi
+### Build 
 
+for build this project you need to check first if you venv is activated, then you can run the following command:
+
+```bash
+pyinstaller --clean valhapi.spec
 ```
