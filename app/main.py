@@ -7,7 +7,7 @@ import os, uvicorn
 from dump import initialize_data
 from sql_data.config import engine, Base
 
-from app.routes import members, core_software, operator_settings, tests
+from app.routes import members, core_software, operator_settings, tests, printers
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ app.include_router(members.router, prefix="/members")
 app.include_router(core_software.router, prefix="/core_software")
 app.include_router(operator_settings.router, prefix="/operator_settings")
 app.include_router(tests.router, prefix="/tests")
+app.include_router(printers.router, prefix="/printers")
 
 
 origins = [
