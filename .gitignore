@@ -1,0 +1,21 @@
+
+# Ignorar archivos y directorios generados por entornos virtuales
+venv/
+.env
+
+# Ignorar archivos de configuración específicos de desarrollo
+*.log
+*.sqlite3
+
+# Ignorar archivos de caché y compilación
+__pycache__/
+*.pyc
+*.pyo
+
+# Otros archivos y directorios que puedas querer ignorar
+.idea/
+.vscode/
+node_modules/
+
+dist/
+build/
