@@ -6,13 +6,14 @@ class OperatorSettingsBase(BaseModel):
     measure: Annotated[str, constr(max_length=50)]
     business: Annotated[str, constr(max_length=50)]
     collation: Annotated[str, constr(max_length=50)]
-    company_name: Annotated[str, constr(max_length=60)]  
+    company_name: Annotated[str, constr(max_length=60)]
+    selected_printer: Annotated[str, constr(max_length=50)] = None
 
 class OperatorSettingsCreate(OperatorSettingsBase):
     pass
 
 class OperatorSettings(OperatorSettingsBase):
-    id: int  # Agregar el campo id
+    id: int  
 
     class Config:
         from_attributes = True

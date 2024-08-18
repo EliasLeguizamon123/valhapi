@@ -10,3 +10,4 @@ class OperatorSettings(Base):
     business = Column(String(50))
     collation = Column(String(50))
     company_name = Column(String(60))
+    selected_printer = Column(String(50), nullable=True)
