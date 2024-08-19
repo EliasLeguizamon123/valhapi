@@ -26,13 +26,13 @@ cd valhapi
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-pip install -r requirements.txt | pip install fastapi uvicorn pyinstaller
+pip install -r requirements.txt || pip install fastapi uvicorn pyinstaller
 ```
 
 ### Run project
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload  || python -m uvicorn app.main:app --reload
 
 ```
 

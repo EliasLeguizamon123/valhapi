@@ -1,7 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter
 import win32print # type: ignore
-
-app = FastAPI()
 
 router = APIRouter()
 
