@@ -42,6 +42,8 @@ def get_results(db: Session = Depends(get_db)):
             serial_data += line + "\n"
 
         serial_port.close()
+        
+        print(serial_data)
 
         data = process_serial_data(serial_data)
         print(data)
@@ -84,11 +86,10 @@ def get_results(db: Session = Depends(get_db)):
         
         print('Test created', new_test)
         return new_test
-
     except serial.SerialException as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=404, detail="serial port COM3 not found")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=f"{e}")
 
 def process_serial_data(data: str) -> Dict:
     values = {}
