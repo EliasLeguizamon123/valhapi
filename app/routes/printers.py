@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
-from io import BytesIO
-from fpdf import FPDF
-import win32print, os
-from pathlib import Path
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from glob import glob
+import win32print, win32api, io, os # type: ignore
 
 from sql_data.schemas.tests_primary import TestResponse
 
@@ -26,46 +27,60 @@ def get_printers():
 
 @router.post("/print")
 def print_doc(request: PrintRequest):
-    # Crear el contenido de texto plano
-    text_content = ""
-
-    if request.printout == 1:
-        text_content += "BODY COMPOSITION REPORT\n"
-        text_content += f"Name: {request.test.test_primary.by_field}\n"
-        text_content += f"Weight: {request.test.test_primary.weight}\n"
-        text_content += f"BMI: {request.test.test_primary.bmi}\n"
-        # Agrega más campos aquí como lo necesites
-
-    # Obtener la ruta de la carpeta "Documents"
-    documents_path = Path.home() / "Documents"
+    # Crear un buffer para almacenar el PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
+    styles = getSampleStyleSheet()
     
-    # Ruta del archivo a guardar
-    file_path = documents_path / "body_composition_report.txt"
+    if request.printout == 1:
+        story.append(Paragraph("BODY COMPOSITION REPORT", styles['Title']))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph(f"Name: {request.test.test_primary.by_field}", styles['Normal']))
+        story.append(Paragraph(f"Test by: {request.test.test_primary.by_field}", styles['Normal']))
+        story.append(Paragraph(f"Weight: {request.test.test_primary.weight}", styles['Normal']))
+        story.append(Paragraph(f"BMI: {request.test.test_primary.bmi}", styles['Normal']))
+        story.append(Paragraph(f"Body fat: {request.test.test_primary.body_fat}", styles['Normal']))
+        story.append(Paragraph(f"Bio impedance: {request.test.test_primary.bio_impedance}", styles['Normal']))
+        story.append(Paragraph(f"Visceral fat: {request.test.test_primary.visceral_fat}", styles['Normal']))
+        story.append(Paragraph(f"Lean mass: {request.test.test_primary.lean_mass}", styles['Normal']))
+        story.append(Paragraph(f"Muscle mass: {request.test.test_primary.muscle_mass}", styles['Normal']))
+        story.append(Paragraph(f"Body water: {request.test.test_primary.body_water}", styles['Normal']))
+        story.append(Paragraph(f"Creation date: {request.test.test_primary.creation_date}", styles['Normal']))
+        story.append(Paragraph(f"Basal metabolic rate: {request.test.test_energy.basal_metabolic_rate}", styles['Normal']))
+        story.append(Paragraph(f"Very light activity: {request.test.test_energy.very_light_activity}", styles['Normal']))
+        story.append(Paragraph(f"Light activity: {request.test.test_energy.light_activity}", styles['Normal']))
+        story.append(Paragraph(f"Moderate activity: {request.test.test_energy.moderate_activity}", styles['Normal']))
+        story.append(Paragraph(f"Heavy activity: {request.test.test_energy.heavy_activity}", styles['Normal']))
+        story.append(Paragraph(f"Very heavy activity: {request.test.test_energy.very_heavy_activity}", styles['Normal']))
+        story.append(Paragraph(f"Torso: {request.test.test_segmental.torso}", styles['Normal']))
+        story.append(Paragraph(f"Right arm: {request.test.test_segmental.right_arm}", styles['Normal']))
+        story.append(Paragraph(f"Left arm: {request.test.test_segmental.left_arm}", styles['Normal']))
+        story.append(Paragraph(f"Right leg: {request.test.test_segmental.right_leg}", styles['Normal']))
+        story.append(Paragraph(f"Left leg: {request.test.test_segmental.left_leg}", styles['Normal']))
+    
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+
+    # Guardar el PDF en un archivo temporal
+    temp_file_path = "temp_report.pdf"
+    with open(temp_file_path, "wb") as f:
+        print(f"Writing to file {temp_file_path}")
+        f.write(pdf_bytes)
 
     try:
-        # Guardar el contenido en un archivo .txt
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(text_content)
+        printer_name = "Microsoft Print to PDF"
 
-        return {"detail": f"File saved successfully at {file_path}"}
+        printer_handle = win32print.OpenPrinter(printer_name)
+        
+        win32api.ShellExecute(0, "print", temp_file_path, f'"{printer_name}"', ".", 0)
+        win32print.ClosePrinter(printer_handle)
+        
+
+        return {"detail": "Printed successfully"}
 
     except Exception as e:
+        # Eliminar el archivo temporal en caso de error
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail=str(e))
-    # try:
-    #     # Abrir la impresora
-    #     printer_handle = win32print.OpenPrinter(request.printer_name)
-    #     doc_info = ("Body composition report", None, "RAW")
-    #     win32print.StartDocPrinter(printer_handle, 1, doc_info)
-    #     win32print.StartPagePrinter(printer_handle)
-
-    #     # Enviar el texto a la impresora
-    #     win32print.WritePrinter(printer_handle, text_content.encode('utf-8'))
-
-    #     win32print.EndPagePrinter(printer_handle)
-    #     win32print.EndDocPrinter(printer_handle)
-    #     win32print.ClosePrinter(printer_handle)
-
-    #     return {"detail": "Printed successfully"}
-
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
