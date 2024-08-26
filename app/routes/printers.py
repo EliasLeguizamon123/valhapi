@@ -69,7 +69,7 @@ def print_doc(request: PrintRequest):
         f.write(pdf_bytes)
 
     try:
-        printer_name = "Microsoft Print to PDF"
+        printer_name = request.printer_name
 
         printer_handle = win32print.OpenPrinter(printer_name)
         
