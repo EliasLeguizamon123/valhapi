@@ -7,7 +7,7 @@ import os, uvicorn
 from dump import initialize_data
 from sql_data.config import engine, Base
 
-from app.routes import members, core_software, operator_settings, tests
+from app.routes import members, core_software, operator_settings, tests, printers, scales
 
 app = FastAPI()
 
@@ -15,12 +15,13 @@ app.include_router(members.router, prefix="/members")
 app.include_router(core_software.router, prefix="/core_software")
 app.include_router(operator_settings.router, prefix="/operator_settings")
 app.include_router(tests.router, prefix="/tests")
+app.include_router(printers.router, prefix="/printers")
+app.include_router(scales.router, prefix="/scales")
 
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(
@@ -43,7 +44,7 @@ def get_current_time():
 
 
 # Run with pyinstaller
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 8000
 
 # Configurar el logger para escribir en un archivo
 log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'valhapi.log')

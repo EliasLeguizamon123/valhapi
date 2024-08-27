@@ -56,4 +56,6 @@ def modify_member(member_id: str, member: MemberCreate, db: Session = Depends(ge
     db_member = get_member(db, member_id=member_id)
     if db_member is None:
         raise HTTPException(status_code=404, detail="Member not found")
+    if member_id != member.id:
+        raise HTTPException(status_code=400, detail="Member ID cannot be modified")
     return update_member(db, member)

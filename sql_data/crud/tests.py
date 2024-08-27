@@ -56,6 +56,9 @@ def get_all_tests_of_member(db: Session, member_id: str):
 
 
 def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestEnergyCreate, test_segmental: TestSegmentalCreate):
+    
+    print('creo un test nuevo')
+    
     # Crear TestPrimary
     db_test_primary = TestPrimaryModel(
         body_fat=test_primary.body_fat,
@@ -67,7 +70,9 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         bmi=test_primary.bmi,
         weight=test_primary.weight,
         member_id=test_primary.member_id,
-        creation_date=datetime.utcnow()
+        creation_date=datetime.utcnow(),
+        from_field=test_primary.from_field,
+        by_field=test_primary.by_field
     )
     db.add(db_test_primary)
     db.commit()
@@ -100,5 +105,15 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
     
     # Confirmar los cambios
     db.commit()
+    
+    # Refrescar los objetos para obtener los datos actualizados
     db.refresh(db_test_primary)
-    return db_test_primary
+    db.refresh(db_test_energy)
+    db.refresh(db_test_segmental)
+    
+    # Retornar un diccionario con los tres objetos
+    return {
+        "test_primary": db_test_primary,
+        "test_energy": db_test_energy,
+        "test_segmental": db_test_segmental
+    }

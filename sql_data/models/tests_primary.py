@@ -17,8 +17,8 @@ class TestPrimary(Base):
     weight = Column(Float)
     creation_date = Column(DateTime, server_default=func.now())
     member_id = Column(String, ForeignKey('members.id'), nullable=True)
-    from_field = Column(String(60)) 
-    by_field = Column(String(60))  
+    from_field = Column(String(60), nullable=True)
+    by_field = Column(String(60), nullable=True)
     
     member = relationship('Member', back_populates='tests')
     energy = relationship('TestEnergy', back_populates='test', uselist=False)
