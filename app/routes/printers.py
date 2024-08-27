@@ -70,12 +70,12 @@ def print_doc(request: PrintRequest):
 
     try:
         printer_name = request.printer_name
-
-        printer_handle = win32print.OpenPrinter(printer_name)
+        appdata_path = os.getenv('APPDATA')
+        pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
         
-        win32api.ShellExecute(0, "print", temp_file_path, f'"{printer_name}"', ".", 0)
-        win32print.ClosePrinter(printer_handle)
+        # Ejecutar el comando PDFToPrinter que esta en %appdata%/Valhalla
         
+        os.system(f"{pdf_to_printer_path} {temp_file_path} \"{printer_name}\"")
 
         return {"detail": "Printed successfully"}
 
