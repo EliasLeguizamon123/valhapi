@@ -70,7 +70,7 @@ def print_doc(request: PrintRequest):
         appdata_path = os.getenv('APPDATA')
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
         
-        os.system(f"{pdf_to_printer_path} {temp_file_path} \"{printer_name}\"")
+        os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
 
         return {"detail": "Printed successfully"}
 
