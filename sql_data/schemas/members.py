@@ -5,18 +5,11 @@ from typing import Optional
 class MemberBase(BaseModel):
     first_name: str
     last_name: str
-    age: int
-    gender: str
-    height: float
-    weight: float
+   
 class MemberCreate(BaseModel):
     id: str
     first_name: str
     last_name: str
-    age: int
-    gender: str
-    height: float
-    weight: float
 
 
 class Member(MemberBase):
