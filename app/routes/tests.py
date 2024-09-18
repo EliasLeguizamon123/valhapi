@@ -39,7 +39,7 @@ def read_tests(member_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No tests found for the specified member")
     return tests
 
-@router.post("/{member_id}", response_model=TestPrimary)
+@router.post("/{member_id}", response_model=TestResponse)
 def create_member_test(
     member_id: str, 
     test_primary: TestPrimaryCreate, 

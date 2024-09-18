@@ -20,7 +20,7 @@ def get_printers():
     
     printers = [printer for printer in printers if not printer.startswith("Microsoft XPS")]
     printers = [printer for printer in printers if not printer.startswith("OneNote")]
-    # printers = [printer for printer in printers if not printer.startswith("Microsoft")]
+    printers = [printer for printer in printers if not printer.startswith("Microsoft")]
     printers = [printer for printer in printers if not printer.startswith("Fax")]
     return {"printers": printers}
 
@@ -69,11 +69,18 @@ def print_doc(request: PrintRequest):
         printer_name = request.printer_name
         appdata_path = os.getenv('APPDATA')
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
-        
+
+        if not os.path.exists(pdf_to_printer_path):
+            raise HTTPException(status_code=404, detail="PDFToPrinter.exe not found in the specified path")
+
+        print(f"Printing in {pdf_to_printer_path}")
+
         os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
 
         return {"detail": "Printed successfully"}
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
