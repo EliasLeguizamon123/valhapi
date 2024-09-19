@@ -3,8 +3,7 @@ from fastapi import APIRouter, HTTPException
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
-from glob import glob
-import win32print, win32api, io, os # type: ignore
+import win32print, io, os # type: ignore
 
 from sql_data.schemas.tests_primary import TestResponse
 
@@ -19,15 +18,14 @@ class PrintRequest(BaseModel):
 def get_printers():
     printers = [printer[2] for printer in win32print.EnumPrinters(2)]
     
-    # Exclude all the virtual printers
     printers = [printer for printer in printers if not printer.startswith("Microsoft XPS")]
     printers = [printer for printer in printers if not printer.startswith("OneNote")]
+    printers = [printer for printer in printers if not printer.startswith("Microsoft")]
     printers = [printer for printer in printers if not printer.startswith("Fax")]
     return {"printers": printers}
 
 @router.post("/print")
 def print_doc(request: PrintRequest):
-    # Crear un buffer para almacenar el PDF
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
@@ -37,7 +35,7 @@ def print_doc(request: PrintRequest):
         story.append(Paragraph("BODY COMPOSITION REPORT", styles['Title']))
         story.append(Spacer(1, 12))
         story.append(Paragraph(f"Name: {request.test.test_primary.by_field}", styles['Normal']))
-        story.append(Paragraph(f"Test by: {request.test.test_primary.by_field}", styles['Normal']))
+        story.append(Paragraph(f"Test by: {request.test.test_primary.from_field}", styles['Normal']))
         story.append(Paragraph(f"Weight: {request.test.test_primary.weight}", styles['Normal']))
         story.append(Paragraph(f"BMI: {request.test.test_primary.bmi}", styles['Normal']))
         story.append(Paragraph(f"Body fat: {request.test.test_primary.body_fat}", styles['Normal']))
@@ -62,7 +60,6 @@ def print_doc(request: PrintRequest):
     doc.build(story)
     pdf_bytes = buffer.getvalue()
 
-    # Guardar el PDF en un archivo temporal
     temp_file_path = "temp_report.pdf"
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
@@ -72,15 +69,19 @@ def print_doc(request: PrintRequest):
         printer_name = request.printer_name
         appdata_path = os.getenv('APPDATA')
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
-        
-        # Ejecutar el comando PDFToPrinter que esta en %appdata%/Valhalla
-        
-        os.system(f"{pdf_to_printer_path} {temp_file_path} \"{printer_name}\"")
+
+        if not os.path.exists(pdf_to_printer_path):
+            raise HTTPException(status_code=404, detail="PDFToPrinter.exe not found in the specified path")
+
+        print(f"Printing in {pdf_to_printer_path}")
+
+        os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
 
         return {"detail": "Printed successfully"}
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        # Eliminar el archivo temporal en caso de error
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
         raise HTTPException(status_code=500, detail=str(e))

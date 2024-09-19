@@ -11,7 +11,6 @@ from sql_data.models.tests_energy import TestEnergy as TestEnergyModel
 from sql_data.schemas.tests_segmental import TestSegmentalCreate
 from sql_data.models.tests_segmental import TestSegmental as TestSegmentalModel
 
-from sql_data.models.members import Member
 
 def get_all_tests_of_member(db: Session, member_id: str):
     results = db.query(TestPrimaryModel).filter(TestPrimaryModel.member_id == member_id).all()
