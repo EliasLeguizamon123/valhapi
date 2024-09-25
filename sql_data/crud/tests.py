@@ -65,13 +65,17 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         visceral_fat=test_primary.visceral_fat,
         lean_mass=test_primary.lean_mass,
         muscle_mass=test_primary.muscle_mass,
+        height=test_primary.height,
+        age=test_primary.age,
         body_water=test_primary.body_water,
         bmi=test_primary.bmi,
         weight=test_primary.weight,
         member_id=test_primary.member_id,
         creation_date=datetime.utcnow(),
         from_field=test_primary.from_field,
-        by_field=test_primary.by_field
+        by_field=test_primary.by_field,
+        aiw=test_primary.aiw,
+        ohms=test_primary.ohms
     )
     db.add(db_test_primary)
     db.commit()
