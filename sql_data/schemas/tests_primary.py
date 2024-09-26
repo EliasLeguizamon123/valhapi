@@ -17,10 +17,13 @@ class TestPrimaryBase(BaseModel):
     weight: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
     height: Optional[str] = None
     age: Optional[int] = None
-    ohms: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
     from_field: Optional[str] = None
     by_field: Optional[str] = None
     aiw: Optional[float] = None
+    gender: Optional[int] = None
+    lean_mass_percent: Optional[float] = None
+    body_water_percent: Optional[float] = None
+    body_fat_percent: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
 
 class TestPrimaryCreate(TestPrimaryBase):
     creation_date: Optional[datetime] = None

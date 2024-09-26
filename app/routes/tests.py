@@ -67,10 +67,11 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
     output = StringIO()
     writer = csv.writer(output)
     
+    # Agregar los encabezados con los campos faltantes
     writer.writerow([
         "Test ID", "Member ID", "Body Fat", "Bio Impedance", "Visceral Fat",
-        "Lean Mass", "Muscle Mass", "Body Water", "BMI", "Weight",
-        "From", "By",
+        "Lean Mass", "Muscle Mass", "Body Water", "BMI", "Weight", "Height", "Age",
+        "From", "By", "AIW", "Gender", "Lean Mass Percent", "Body Water Percent", "Body Fat Percent",
         "Basal Metabolic Rate", "Very Light Activity", "Light Activity",
         "Moderate Activity", "Heavy Activity", "Very Heavy Activity",
         "Right Arm", "Left Arm", "Right Leg", "Left Leg", "Torso"
@@ -83,8 +84,11 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
             test['test_primary'].visceral_fat, test['test_primary'].lean_mass,
             test['test_primary'].muscle_mass, test['test_primary'].body_water,
             test['test_primary'].bmi, test['test_primary'].weight,
-            test['test_primary'].from_field,
-            test['test_primary'].by_field,
+            test['test_primary'].height, test['test_primary'].age,
+            test['test_primary'].from_field, test['test_primary'].by_field,
+            test['test_primary'].aiw, test['test_primary'].gender,
+            test['test_primary'].lean_mass_percent, test['test_primary'].body_water_percent,
+            test['test_primary'].body_fat_percent,
             test['test_energy'].basal_metabolic_rate,
             test['test_energy'].very_light_activity,
             test['test_energy'].light_activity,
@@ -98,4 +102,5 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
     
     output.seek(0)
     return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tests.csv"})
+
 

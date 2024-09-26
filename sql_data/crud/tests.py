@@ -56,7 +56,7 @@ def get_all_tests_of_member(db: Session, member_id: str):
 
 def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestEnergyCreate, test_segmental: TestSegmentalCreate):
     
-    print('creo un test nuevo')
+    print('creo un test nuevo', test_primary)
     
     # Crear TestPrimary
     db_test_primary = TestPrimaryModel(
@@ -65,17 +65,20 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         visceral_fat=test_primary.visceral_fat,
         lean_mass=test_primary.lean_mass,
         muscle_mass=test_primary.muscle_mass,
-        height=test_primary.height,
-        age=test_primary.age,
         body_water=test_primary.body_water,
         bmi=test_primary.bmi,
         weight=test_primary.weight,
+        height=test_primary.height,
+        age=test_primary.age,
         member_id=test_primary.member_id,
         creation_date=datetime.utcnow(),
         from_field=test_primary.from_field,
         by_field=test_primary.by_field,
         aiw=test_primary.aiw,
-        ohms=test_primary.ohms
+        gender=test_primary.gender,
+        lean_mass_percent=test_primary.lean_mass_percent,
+        body_water_percent=test_primary.body_water_percent,
+        body_fat_percent=test_primary.body_fat_percent,
     )
     db.add(db_test_primary)
     db.commit()
@@ -106,15 +109,12 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
     )
     db.add(db_test_segmental)
     
-    # Confirmar los cambios
     db.commit()
     
-    # Refrescar los objetos para obtener los datos actualizados
     db.refresh(db_test_primary)
     db.refresh(db_test_energy)
     db.refresh(db_test_segmental)
     
-    # Retornar un diccionario con los tres objetos
     return {
         "test_primary": db_test_primary,
         "test_energy": db_test_energy,

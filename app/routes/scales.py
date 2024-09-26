@@ -46,7 +46,7 @@ def get_results(db: Session = Depends(get_db)):
         print(serial_data)
 
         data = process_serial_data(serial_data)
-        print(data)
+        
         if not data:
             return {"error": "Failed to parse serial data"}
 
@@ -56,14 +56,16 @@ def get_results(db: Session = Depends(get_db)):
             bio_impedance=data['bio_impedance'],
             visceral_fat=data['visceral_fat'],
             lean_mass=data['lean_mass'],
+            lean_mass_percent=data['lean_mass_percent'],
             muscle_mass=data['muscle_mass'],
             body_water=data['body_water'],
+            body_water_percent=data['body_water_percent'],
             bmi=data['bmi'],
             weight=data['weight'],
             height=data['height'],
-            ohms=data['ohms'],
             aiw=data['aiw'],
             age=data['age'],
+            gender=int(data['gender']),
             from_field=data['from_field'],
             by_field=data['by_field'],
             member_id=data['from_field'] or None,
@@ -112,7 +114,7 @@ def process_serial_data(data: str) -> Dict:
             
             try:
                 if key == "Weight(lb)":
-                    values['weight_lb'] = float(clean_value)
+                    values['weight'] = float(clean_value)
                 elif key == "Weight(kg)":
                     values['weight_kg'] = float(clean_value)
                 elif key == "Hgt Ft":
@@ -122,7 +124,7 @@ def process_serial_data(data: str) -> Dict:
                 elif key == "Hgt(cm)":
                     cm = clean_value
                 elif key == "BF(kg)":
-                    values['body_fat_kg'] = float(clean_value)
+                    values['body_fat'] = float(clean_value)
                 elif key == "BF(%)":
                     values['body_fat_percent'] = float(clean_value)
                 elif key == "Ohms":
@@ -130,39 +132,37 @@ def process_serial_data(data: str) -> Dict:
                 elif key == "VF(#)":
                     values['visceral_fat'] = float(clean_value)
                 elif key == "FFM(kg)":
-                    values['lean_mass_kg'] = float(clean_value)
+                    values['lean_mass'] = float(clean_value)
                 elif key == "FFM(%)":
                     values['lean_mass_percent'] = float(clean_value)
                 elif key == "TBW(kg)":
-                    values['body_water_kg'] = float(clean_value)
+                    values['body_water'] = float(clean_value)
                 elif key == "TBW(%)":
                     values['body_water_percent'] = float(clean_value)
                 elif key == "BMI":
                     values['bmi'] = float(clean_value)
                 elif key == "MM(lb)":
-                    values['muscle_mass_lb'] = float(clean_value)
-                elif key == "MM(kg)":
-                    values['muscle_mass_kg'] = float(clean_value)
+                    values['muscle_mass'] = float(clean_value)
                 elif key == "TR(lb)":
-                    values['torso_fat_lb'] = float(clean_value)
+                    values['torso'] = float(clean_value)
                 elif key == "TR(%)":
-                    values['torso_fat_percent'] = float(clean_value)
+                    values['torso_percent'] = float(clean_value)
                 elif key == "LL(lb)":
-                    values['left_leg_fat_lb'] = float(clean_value)
+                    values['left_leg'] = float(clean_value)
                 elif key == "LL(%)":
-                    values['left_leg_fat_percent'] = float(clean_value)
+                    values['left_leg_percent'] = float(clean_value)
                 elif key == "RL(lb)":
-                    values['right_leg_fat_lb'] = float(clean_value)
+                    values['right_leg'] = float(clean_value)
                 elif key == "RL(%)":
-                    values['right_leg_fat_percent'] = float(clean_value)
+                    values['right_leg_percent'] = float(clean_value)
                 elif key == "LA(lb)":
-                    values['left_arm_fat_lb'] = float(clean_value)
+                    values['left_arm'] = float(clean_value)
                 elif key == "LA(%)":
-                    values['left_arm_fat_percent'] = float(clean_value)
+                    values['left_arm_percent'] = float(clean_value)
                 elif key == "RA(lb)":
-                    values['right_arm_fat_lb'] = float(clean_value)
+                    values['right_arm'] = float(clean_value)
                 elif key == "RA(%)":
-                    values['right_arm_fat_percent'] = float(clean_value)
+                    values['right_arm_percent'] = float(clean_value)
                 elif key == "BMR":
                     values['basal_metabolic_rate'] = float(clean_value)
                 elif key == "DCN(VL)":
@@ -176,19 +176,18 @@ def process_serial_data(data: str) -> Dict:
                 elif key == "DCN(VH)":
                     values['very_heavy_activity'] = float(clean_value)
                 elif key == "AIW(%)":
-                    values['aiw_percent'] = float(clean_value)
+                    values['aiw'] = float(clean_value)
                 elif key == "Provider ID":
-                    values['provider_id'] = clean_value
+                    values['from_field'] = clean_value
                 elif key == "Patient ID":
-                    values['patient_id'] = clean_value
+                    values['by_field'] = clean_value
                 elif key == "Gender":
-                    values['gender'] = int(clean_value)  # 0 for female, 1 for male
+                    values['gender'] = int(clean_value)
                 elif key == "Age":
                     values['age'] = int(clean_value)
             except ValueError:
                 values[key] = value
 
-    # Formatear la altura
     if feet is not None and inches is not None and cm is not None:
         values['height'] = f"{feet}' {inches}\" {cm}cm"
     

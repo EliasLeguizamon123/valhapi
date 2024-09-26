@@ -72,10 +72,11 @@ def plain_summary(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
+    gender = "M" if request.test.test_primary.gender == 1 else "F"
 
     # Title
     title_data = [
-        ["", f"Date: {request.test.test_primary.creation_date}"]
+        ["", f"Date: {request.test.test_primary.creation_date.strftime('%Y-%m-%d')}"]
     ]
     title_table = Table(title_data, colWidths=[400, 100])
     title_table.setStyle(TableStyle([
@@ -92,10 +93,16 @@ def plain_summary(request):
     info_data = [
         ["Name:", request.test.test_primary.from_field],
         ["Prepared By:", request.test.test_primary.by_field],
+        [f"Gender: {gender}", f"Age: {request.test.test_primary.age}"],
+        [f"Height: {request.test.test_primary.height} ", f"Weight: {request.test.test_primary.weight} Lbs ({pounds_to_kg(request.test.test_primary.weight)} Kg)"],
+        ["Ohms: ", request.test.test_primary.bio_impedance],
         ["Current body weight:", f"{request.test.test_primary.weight} Lbs\n{pounds_to_kg(request.test.test_primary.weight)} Kg"],
-        ["Total Body Fat:", f"{request.test.test_primary.body_fat} lbs\n{pounds_to_kg(request.test.test_primary.body_fat)} Kg"],
+        ["Total Body Fat:", f"{request.test.test_primary.body_fat} lbs\n{pounds_to_kg(request.test.test_primary.body_fat)} Kg\n{request.test.test_primary.body_fat_percent} %"],
         ["Visceral Fat:", request.test.test_primary.visceral_fat],
         ["Muscle Mass:", f"{request.test.test_primary.muscle_mass} lbs\n{pounds_to_kg(request.test.test_primary.muscle_mass)} Kg"],
+        ["Lean Mass:", f"{request.test.test_primary.lean_mass} lbs\n{pounds_to_kg(request.test.test_primary.lean_mass)} Kg\n{request.test.test_primary.lean_mass_percent} %"],
+        ["Body Water:", f"{request.test.test_primary.body_water} lbs\n{request.test.test_primary.body_water_percent} %"],
+        ["BMI:", request.test.test_primary.bmi],
     ]
     
     # Create the info table
