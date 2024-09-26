@@ -26,14 +26,11 @@ def get_printers():
     return {"printers": printers}
 
 @router.post("/print")
-def print_doc(request: PrintRequest):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    story = []
-    styles = getSampleStyleSheet()
-    
+def print_doc(request: PrintRequest):    
     if request.printout == 1:
         pdf_bytes = plain_summary(request)
+        if not isinstance(pdf_bytes, bytes):
+            raise Exception("Error generating PDF: output is not bytes")
 
     temp_file_path = f"{request.test.test_primary.test_id}.pdf"
     with open(temp_file_path, "wb") as f:
@@ -44,22 +41,26 @@ def print_doc(request: PrintRequest):
         printer_name = request.printer_name
         appdata_path = os.getenv('APPDATA')
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
+        print(f"PDFToPrinter.exe path: {pdf_to_printer_path}")
 
         if not os.path.exists(pdf_to_printer_path):
             raise HTTPException(status_code=404, detail="PDFToPrinter.exe not found in the specified path")
 
         print(f"Printing in {pdf_to_printer_path}")
 
-        os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
+        result = os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
+        if result != 0:
+            raise Exception(f"Error executing print command, result code: {result}")
 
         return {"detail": "Printed successfully"}
 
     except HTTPException as http_exc:
-        raise http_exc
+        return http_exc
     except Exception as e:
+        print(f"Error: {e}")
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-        raise HTTPException(status_code=500, detail=str(e))
+        return HTTPException(status_code=500, detail=str(e))
     
 def pounds_to_kg(pounds: float) -> float:
     return round(pounds * 0.453592, 2)
