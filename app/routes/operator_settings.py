@@ -1,9 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from sql_data.schemas.operator_settings import OperatorSettings, OperatorSettingsCreate
 from sql_data.models.operator_settings import OperatorSettings as OperatorSettingsModel
 from sql_data.config import SessionLocal
+
+import win32print, serial.tools.list_ports
+
+class Defaults(BaseModel):
+    printers: list[str]
+    operator_settings: OperatorSettings
+    scale_connector: str
 
 router = APIRouter()
 
@@ -36,3 +44,29 @@ def create_or_update_operator_settings(operator_settings: OperatorSettingsCreate
         db.commit()
         db.refresh(new_operator_settings)
         return new_operator_settings
+    
+@router.get("/defaults", response_model=Defaults)
+def get_default_operator_settings(db: Session = Depends(get_db)):
+    printers = [printer[2] for printer in win32print.EnumPrinters(2)]
+    
+    printers = [printer for printer in printers if not printer.startswith("Microsoft XPS")]
+    printers = [printer for printer in printers if not printer.startswith("OneNote")]
+    printers = [printer for printer in printers if not printer.startswith("Microsoft")]
+    printers = [printer for printer in printers if not printer.startswith("Fax")]
+    
+    if not printers:
+        raise HTTPException(status_code=404, detail="No printers found")
+    
+    operator_settings = db.query(OperatorSettingsModel).first()
+    
+    if operator_settings is None:
+        raise HTTPException(status_code=404, detail="Operator settings not found")
+    
+    ports = serial.tools.list_ports.comports()
+    serial_ports = [port.device for port in ports]
+    
+    if not serial_ports:
+        raise HTTPException(status_code=404, detail="No serial ports found")
+    
+    # return defaults
+    return Defaults(printers=printers, operator_settings=operator_settings, scale_connector=serial_ports[0] if serial_ports else None)
