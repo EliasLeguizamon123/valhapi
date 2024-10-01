@@ -6,7 +6,7 @@ from sqlalchemy.sql import func
 class TestSegmental(Base):
     __tablename__ = 'tests_segmental'
     
-    test_id = Column(Integer, ForeignKey('tests_primary.test_id'), primary_key=True)
+    test_id = Column(Integer, ForeignKey('tests_primary.test_id', ondelete='CASCADE'), primary_key=True)
     right_arm = Column(Float)
     left_arm = Column(Float)
     right_leg = Column(Float)

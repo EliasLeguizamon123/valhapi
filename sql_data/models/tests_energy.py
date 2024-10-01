@@ -6,7 +6,7 @@ from sqlalchemy.sql import func
 class TestEnergy(Base):
     __tablename__ = 'tests_energy'
     
-    test_id = Column(Integer, ForeignKey('tests_primary.test_id'), primary_key=True)
+    test_id = Column(Integer, ForeignKey('tests_primary.test_id', ondelete='CASCADE'), primary_key=True)
     basal_metabolic_rate = Column(Float)
     very_light_activity = Column(Float)
     light_activity = Column(Float)
@@ -15,4 +15,4 @@ class TestEnergy(Base):
     very_heavy_activity = Column(Float)
     creation_date = Column(DateTime, server_default=func.now())
     
-    test = relationship('TestPrimary', back_populates='energy')
+    test = relationship('TestPrimary', back_populates='energy' )
