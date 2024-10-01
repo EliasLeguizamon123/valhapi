@@ -32,7 +32,7 @@ def print_doc(request: PrintRequest):
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
 
-    temp_file_path = f"{request.test.test_primary.test_id}.pdf"
+    temp_file_path = f"plainSummery_{request.test.test_primary.from_field}{request.test.test_primary.creation_date}.pdf"
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
         f.write(pdf_bytes)
@@ -87,7 +87,7 @@ def plain_summary(request):
     ]))
 
     story.append(title_table)
-    story.append(Paragraph(f"B O D Y  C O M P O S I T I O N  R E P O R T", styles['Title']))
+    story.append(Paragraph(f"B O D Y    C O M P O S I T I O N    R E P O R T", styles['Title']))
     story.append(Spacer(1, 12))
 
     # Info general
@@ -95,14 +95,14 @@ def plain_summary(request):
         ["Name:", request.test.test_primary.from_field],
         ["Prepared By:", request.test.test_primary.by_field],
         [f"Gender: {gender}", f"Age: {request.test.test_primary.age}"],
-        [f"Height: {request.test.test_primary.height} ", f"Weight: {request.test.test_primary.weight} Lbs ({pounds_to_kg(request.test.test_primary.weight)} Kg)"],
+        [f"Height: ", f"{request.test.test_primary.height}"],
         ["Ohms: ", request.test.test_primary.bio_impedance],
         ["Current body weight:", f"{request.test.test_primary.weight} Lbs\n{pounds_to_kg(request.test.test_primary.weight)} Kg"],
         ["Total Body Fat:", f"{request.test.test_primary.body_fat} lbs\n{pounds_to_kg(request.test.test_primary.body_fat)} Kg\n{request.test.test_primary.body_fat_percent} %"],
         ["Visceral Fat:", request.test.test_primary.visceral_fat],
         ["Muscle Mass:", f"{request.test.test_primary.muscle_mass} lbs\n{pounds_to_kg(request.test.test_primary.muscle_mass)} Kg"],
-        ["Lean Mass:", f"{request.test.test_primary.lean_mass} lbs\n{pounds_to_kg(request.test.test_primary.lean_mass)} Kg\n{request.test.test_primary.lean_mass_percent} %"],
-        ["Body Water:", f"{request.test.test_primary.body_water} lbs\n{request.test.test_primary.body_water_percent} %"],
+        ["Fat Free Mass:", f"{request.test.test_primary.lean_mass} lbs\n{pounds_to_kg(request.test.test_primary.lean_mass)} Kg\n{request.test.test_primary.lean_mass_percent} %"],
+        ["Body Water:", f"{request.test.test_primary.body_water} lbs\n{pounds_to_kg(request.test.test_primary.body_water)} Kg\n{request.test.test_primary.body_water_percent} %"],
         ["BMI:", request.test.test_primary.bmi],
     ]
     
