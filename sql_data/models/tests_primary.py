@@ -28,5 +28,5 @@ class TestPrimary(Base):
     body_fat_percent = Column(Float, nullable=True)
     
     member = relationship('Member', back_populates='tests')
-    energy = relationship('TestEnergy', back_populates='test', uselist=False)
-    segmental = relationship('TestSegmental', back_populates='test', uselist=False)
+    energy = relationship('TestEnergy', back_populates='test', uselist=False, cascade='all, delete-orphan')
+    segmental = relationship('TestSegmental', back_populates='test', uselist=False, cascade='all, delete-orphan')

@@ -32,7 +32,7 @@ def print_doc(request: PrintRequest):
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
 
-    temp_file_path = f"plainSummery_{request.test.test_primary.from_field}{request.test.test_primary.creation_date}.pdf"
+    temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
         f.write(pdf_bytes)
@@ -87,7 +87,7 @@ def plain_summary(request):
     ]))
 
     story.append(title_table)
-    story.append(Paragraph(f"B O D Y    C O M P O S I T I O N    R E P O R T", styles['Title']))
+    story.append(Paragraph(f"BODY COMPOSITION REPORT", styles['Title']))
     story.append(Spacer(1, 12))
 
     # Info general
@@ -142,11 +142,26 @@ def plain_summary(request):
     ]))
     story.append(segmental_table)
     story.append(Spacer(1, 12))
+    
+    basal_data = [
+        ["Basal Metabolic Rate:", f"{request.test.test_energy.basal_metabolic_rate} Calories/Day"],
+    ]
 
+    basal_table = Table(basal_data, colWidths=[200, 180])
+    
+    basal_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.white)
+    ]))
+    story.append(basal_table)
+    story.append(Spacer(1, 12))
+    
     # Basal Metabolic Rate
     bmr_data = [
         ["Activity Level", "Daily Caloric Needs"],
-        ["Basal Metabolic Rate:", f"{request.test.test_energy.basal_metabolic_rate} Calories/Day"],
         ["Very light activity:", f"{request.test.test_energy.very_light_activity} Calories/Day"],
         ["Light activity:", f"{request.test.test_energy.light_activity} Calories/Day"],
         ["Moderate activity:", f"{request.test.test_energy.moderate_activity} Calories/Day"],
