@@ -120,3 +120,15 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         "test_energy": db_test_energy,
         "test_segmental": db_test_segmental
     }
+
+def delete_test(db: Session, test_id: int):
+    # Busca el test que deseas eliminar
+    test = db.query(TestPrimaryModel).filter(TestPrimaryModel.test_id == test_id).first()
+    
+    if not test:
+        return False  
+    
+    db.delete(test)
+    db.commit()
+    
+    return True

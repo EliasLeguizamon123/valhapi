@@ -104,3 +104,15 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
     return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tests.csv"})
 
 
+@router.delete("/{test_id}")
+def delete_test(test_id: int, db: Session = Depends(get_db)):
+    test = db.query(TestPrimaryModel).filter(TestPrimaryModel.test_id == test_id).first()
+    
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    # Eliminar el test
+    db.delete(test)
+    db.commit()
+    
+    return {"message": "Test deleted successfully"}

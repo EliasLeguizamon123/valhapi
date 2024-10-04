@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from sql_data.schemas.members import Member, MemberCreate
 from sql_data.models.members import Member as MemberModel
@@ -38,8 +38,22 @@ def create_new_member(member: MemberCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[Member])
-def get_all_members(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    members = get_members(db, skip=skip, limit=limit)
+def get_all_members(
+    skip: int = 0, 
+    limit: int = 100, 
+    search: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(MemberModel)
+    
+    if search:
+        query = query.filter(
+            (MemberModel.first_name.ilike(f"%{search}%")) | 
+            (MemberModel.id == search) | 
+            (MemberModel.last_name.ilike(f"%{search}%"))
+        )
+    
+    members = query.offset(skip).limit(limit).all()
     return members
 
 

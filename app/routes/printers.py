@@ -26,16 +26,13 @@ def get_printers():
     return {"printers": printers}
 
 @router.post("/print")
-def print_doc(request: PrintRequest):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    story = []
-    styles = getSampleStyleSheet()
-    
+def print_doc(request: PrintRequest):    
     if request.printout == 1:
         pdf_bytes = plain_summary(request)
+        if not isinstance(pdf_bytes, bytes):
+            raise Exception("Error generating PDF: output is not bytes")
 
-    temp_file_path = f"{request.test.test_primary.test_id}.pdf"
+    temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
         f.write(pdf_bytes)
@@ -44,22 +41,26 @@ def print_doc(request: PrintRequest):
         printer_name = request.printer_name
         appdata_path = os.getenv('APPDATA')
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
+        print(f"PDFToPrinter.exe path: {pdf_to_printer_path}")
 
         if not os.path.exists(pdf_to_printer_path):
             raise HTTPException(status_code=404, detail="PDFToPrinter.exe not found in the specified path")
 
         print(f"Printing in {pdf_to_printer_path}")
 
-        os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
+        result = os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
+        if result != 0:
+            raise Exception(f"Error executing print command, result code: {result}")
 
         return {"detail": "Printed successfully"}
 
     except HTTPException as http_exc:
-        raise http_exc
+        return http_exc
     except Exception as e:
+        print(f"Error: {e}")
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-        raise HTTPException(status_code=500, detail=str(e))
+        return HTTPException(status_code=500, detail=str(e))
     
 def pounds_to_kg(pounds: float) -> float:
     return round(pounds * 0.453592, 2)
@@ -86,7 +87,7 @@ def plain_summary(request):
     ]))
 
     story.append(title_table)
-    story.append(Paragraph(f"B O D Y  C O M P O S I T I O N  R E P O R T", styles['Title']))
+    story.append(Paragraph(f"BODY COMPOSITION REPORT", styles['Title']))
     story.append(Spacer(1, 12))
 
     # Info general
@@ -94,14 +95,14 @@ def plain_summary(request):
         ["Name:", request.test.test_primary.from_field],
         ["Prepared By:", request.test.test_primary.by_field],
         [f"Gender: {gender}", f"Age: {request.test.test_primary.age}"],
-        [f"Height: {request.test.test_primary.height} ", f"Weight: {request.test.test_primary.weight} Lbs ({pounds_to_kg(request.test.test_primary.weight)} Kg)"],
+        [f"Height: ", f"{request.test.test_primary.height}"],
         ["Ohms: ", request.test.test_primary.bio_impedance],
         ["Current body weight:", f"{request.test.test_primary.weight} Lbs\n{pounds_to_kg(request.test.test_primary.weight)} Kg"],
         ["Total Body Fat:", f"{request.test.test_primary.body_fat} lbs\n{pounds_to_kg(request.test.test_primary.body_fat)} Kg\n{request.test.test_primary.body_fat_percent} %"],
         ["Visceral Fat:", request.test.test_primary.visceral_fat],
         ["Muscle Mass:", f"{request.test.test_primary.muscle_mass} lbs\n{pounds_to_kg(request.test.test_primary.muscle_mass)} Kg"],
-        ["Lean Mass:", f"{request.test.test_primary.lean_mass} lbs\n{pounds_to_kg(request.test.test_primary.lean_mass)} Kg\n{request.test.test_primary.lean_mass_percent} %"],
-        ["Body Water:", f"{request.test.test_primary.body_water} lbs\n{request.test.test_primary.body_water_percent} %"],
+        ["Fat Free Mass:", f"{request.test.test_primary.lean_mass} lbs\n{pounds_to_kg(request.test.test_primary.lean_mass)} Kg\n{request.test.test_primary.lean_mass_percent} %"],
+        ["Body Water:", f"{request.test.test_primary.body_water} lbs\n{pounds_to_kg(request.test.test_primary.body_water)} Kg\n{request.test.test_primary.body_water_percent} %"],
         ["BMI:", request.test.test_primary.bmi],
     ]
     
@@ -141,11 +142,26 @@ def plain_summary(request):
     ]))
     story.append(segmental_table)
     story.append(Spacer(1, 12))
+    
+    basal_data = [
+        ["Basal Metabolic Rate:", f"{request.test.test_energy.basal_metabolic_rate} Calories/Day"],
+    ]
 
+    basal_table = Table(basal_data, colWidths=[200, 180])
+    
+    basal_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.white)
+    ]))
+    story.append(basal_table)
+    story.append(Spacer(1, 12))
+    
     # Basal Metabolic Rate
     bmr_data = [
         ["Activity Level", "Daily Caloric Needs"],
-        ["Basal Metabolic Rate:", f"{request.test.test_energy.basal_metabolic_rate} Calories/Day"],
         ["Very light activity:", f"{request.test.test_energy.very_light_activity} Calories/Day"],
         ["Light activity:", f"{request.test.test_energy.light_activity} Calories/Day"],
         ["Moderate activity:", f"{request.test.test_energy.moderate_activity} Calories/Day"],
