@@ -8,6 +8,7 @@ class OperatorSettingsBase(BaseModel):
     collation: Annotated[str, constr(max_length=50)]
     company_name: Annotated[str, constr(max_length=60)]
     selected_printer: Annotated[str, constr(max_length=50)] = None
+    com: Annotated[str, constr(max_length=15)] = None
     test2: bool = False
     test3: bool = False
     test4: bool = False

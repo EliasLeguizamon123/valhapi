@@ -11,6 +11,7 @@ class OperatorSettings(Base):
     collation = Column(String(50))
     company_name = Column(String(60))
     selected_printer = Column(String(50), nullable=True)
+    com = Column(String(15), nullable=True)
     test2 = Column(Boolean, default=False)
     test3 = Column(Boolean, default=False)
     test4 = Column(Boolean, default=False)
