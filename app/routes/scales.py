@@ -163,7 +163,7 @@ def process_serial_data(data: str) -> Dict:
                     values['right_arm'] = float(clean_value)
                 elif key == "RA(%)":
                     values['right_arm_percent'] = float(clean_value)
-                elif key == "BMR":
+                elif key == "BMR" or key == "REE":
                     values['basal_metabolic_rate'] = float(clean_value)
                 elif key == "DCN(VL)":
                     values['very_light_activity'] = float(clean_value)
