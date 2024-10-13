@@ -27,9 +27,9 @@ def get_db():
         db.close()
 
 @router.get("/get_results")
-def get_results(db: Session = Depends(get_db)):
+def get_results(com: str, db: Session = Depends(get_db)):
     try:
-        serial_port = serial.Serial('COM3', 115200, timeout=40)
+        serial_port = serial.Serial(com, 115200, timeout=40)
         serial_data = ""
 
         while True:
