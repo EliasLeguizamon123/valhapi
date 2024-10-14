@@ -27,9 +27,9 @@ def get_db():
         db.close()
 
 @router.get("/get_results")
-def get_results(db: Session = Depends(get_db)):
+def get_results(com: str, db: Session = Depends(get_db)):
     try:
-        serial_port = serial.Serial('COM3', 115200, timeout=40)
+        serial_port = serial.Serial(com, 115200, timeout=40)
         serial_data = ""
 
         while True:
@@ -163,7 +163,7 @@ def process_serial_data(data: str) -> Dict:
                     values['right_arm'] = float(clean_value)
                 elif key == "RA(%)":
                     values['right_arm_percent'] = float(clean_value)
-                elif key == "BMR":
+                elif key == "BMR" or key == "REE":
                     values['basal_metabolic_rate'] = float(clean_value)
                 elif key == "DCN(VL)":
                     values['very_light_activity'] = float(clean_value)

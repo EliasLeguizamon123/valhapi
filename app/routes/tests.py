@@ -48,7 +48,6 @@ def create_member_test(
     db: Session = Depends(get_db)
 ):
     try:
-        # Asignar el member_id del parámetro de ruta al objeto test_primary
         test_primary.member_id = member_id
         test_primary.creation_date = datetime.utcnow()
 
@@ -67,41 +66,49 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
     output = StringIO()
     writer = csv.writer(output)
     
-    # Agregar los encabezados con los campos faltantes
     writer.writerow([
-        "Test ID", "Member ID", "Body Fat", "Bio Impedance", "Visceral Fat",
-        "Lean Mass", "Muscle Mass", "Body Water", "BMI", "Weight", "Height", "Age",
-        "From", "By", "AIW", "Gender", "Lean Mass Percent", "Body Water Percent", "Body Fat Percent",
+        "Creation Date", "For", "By", "Gender", "Age", "Height", "Ohms", "Weight",
+        "Body Fat", "Visceral Fat", "Muscle Mass", "Lean Mass", "Body Water", "BMI",
+        "Left Arm", "Right Arm", "Left Leg", "Right Leg", "Torso",
         "Basal Metabolic Rate", "Very Light Activity", "Light Activity",
-        "Moderate Activity", "Heavy Activity", "Very Heavy Activity",
-        "Right Arm", "Left Arm", "Right Leg", "Left Leg", "Torso"
+        "Moderate Activity", "Heavy Activity", "Very Heavy Activity"
     ])
     
+    
     for test in tests:
+        gender = "M" if test['test_primary'].gender == "1" else "F"
+        formatted_date = test['test_primary'].creation_date.strftime('%Y-%m-%d')
         writer.writerow([
-            test['test_primary'].test_id, test['test_primary'].member_id,
-            test['test_primary'].body_fat, test['test_primary'].bio_impedance,
-            test['test_primary'].visceral_fat, test['test_primary'].lean_mass,
-            test['test_primary'].muscle_mass, test['test_primary'].body_water,
-            test['test_primary'].bmi, test['test_primary'].weight,
-            test['test_primary'].height, test['test_primary'].age,
-            test['test_primary'].from_field, test['test_primary'].by_field,
-            test['test_primary'].aiw, test['test_primary'].gender,
-            test['test_primary'].lean_mass_percent, test['test_primary'].body_water_percent,
-            test['test_primary'].body_fat_percent,
+            formatted_date,
+            test['test_primary'].from_field, 
+            test['test_primary'].by_field,
+            gender,
+            test['test_primary'].age,
+            test['test_primary'].height,
+            test['test_primary'].bio_impedance,
+            test['test_primary'].weight,
+            test['test_primary'].body_fat,
+            test['test_primary'].visceral_fat,
+            test['test_primary'].muscle_mass,
+            test['test_primary'].lean_mass,
+            test['test_primary'].body_water,
+            test['test_primary'].bmi,
+            test['test_segmental'].left_arm,
+            test['test_segmental'].right_arm,
+            test['test_segmental'].left_leg,
+            test['test_segmental'].right_leg,
+            test['test_segmental'].torso,
             test['test_energy'].basal_metabolic_rate,
             test['test_energy'].very_light_activity,
             test['test_energy'].light_activity,
             test['test_energy'].moderate_activity,
             test['test_energy'].heavy_activity,
-            test['test_energy'].very_heavy_activity,
-            test['test_segmental'].right_arm, test['test_segmental'].left_arm,
-            test['test_segmental'].right_leg, test['test_segmental'].left_leg,
-            test['test_segmental'].torso
+            test['test_energy'].very_heavy_activity
         ])
     
     output.seek(0)
     return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tests.csv"})
+
 
 
 @router.delete("/{test_id}")
@@ -111,7 +118,6 @@ def delete_test(test_id: int, db: Session = Depends(get_db)):
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")
     
-    # Eliminar el test
     db.delete(test)
     db.commit()
     
