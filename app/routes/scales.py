@@ -33,7 +33,7 @@ def get_results(com: str, db: Session = Depends(get_db)):
         serial_data = ""
 
         while True:
-            line = serial_port.readline().decode('utf-8').strip()
+            line = serial_port.read_until(b'\r').decode('utf-8').strip()
             if line.startswith("#START"):
                 serial_data = ""
                 continue
