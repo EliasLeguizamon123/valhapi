@@ -8,7 +8,6 @@ venv/
 *.sqlite3
 
 # Ignorar archivos de caché y compilación
-__pycache__/
 *.pyc
 *.pyo
 
@@ -20,3 +19,11 @@ node_modules/
 dist/
 build/
 *.pdf
+
+# Ignorar caché de Python
+__pycache__/
+*.py[cod]
+
+# Ignorar archivos temporales de Alembic (si los usas)
+alembic/versions/*_backup.sql
+alembic/versions/*_diff.log

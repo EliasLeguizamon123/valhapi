@@ -14,6 +14,7 @@ router = APIRouter()
 class Includes(BaseModel):
     body_fat: bool
     weight: bool
+    ohms: bool
     bio_impedance: bool
     visceral_fat: bool
     muscle_mass: bool
@@ -45,12 +46,15 @@ def print_doc(request: PrintRequest):
         pdf_bytes = plain_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
+        temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 6 and request.includes:
         pdf_bytes = custom_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
+        temp_file_path = f"customSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+    else: 
+        temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
 
-    temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
         f.write(pdf_bytes)
@@ -234,15 +238,23 @@ def custom_summary(request):
         [f"Name: {request.test.test_primary.from_field}", f"Prepared By: {request.test.test_primary.by_field}"],
         [f"Gender: {gender}", f"Age: {request.test.test_primary.age}"],
         [f"Height: ", f"{formatted_height}"],
-        ["Ohms: ", round(request.test.test_primary.bio_impedance, 1)],
-        ["Current body weight:", f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg"],
-        ["Total Body Fat:", f"{round(request.test.test_primary.body_fat, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %"],
-        ["Visceral Fat:", int(request.test.test_primary.visceral_fat)],
-        ["Muscle Mass:", f"{round(request.test.test_primary.muscle_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg"],
-        ["Fat Free Mass:", f"{round(request.test.test_primary.lean_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.lean_mass), 1)} Kg\n{round(request.test.test_primary.lean_mass_percent, 1)} %"],
-        ["Total body Water:", f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %"],
-        ["BMI:", round(request.test.test_primary.bmi, 1)],
     ]
+    if request.includes:
+        info_data.append(["Ohms: ", round(request.test.test_primary.bio_impedance, 1)])
+    if request.includes.weight:
+        info_data.append(["Current body weight:", f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg"])
+    if request.includes.body_fat:
+        info_data.append(["Total Body Fat:", f"{round(request.test.test_primary.body_fat, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %"])
+    if request.includes.visceral_fat:
+        info_data.append(["Visceral Fat:", int(request.test.test_primary.visceral_fat)])
+    if request.includes.muscle_mass:
+        info_data.append(["Muscle Mass:", f"{round(request.test.test_primary.muscle_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg"])
+    if request.includes.lean_mass:
+        info_data.append(["Fat Free Mass:", f"{round(request.test.test_primary.lean_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.lean_mass), 1)} Kg\n{round(request.test.test_primary.lean_mass_percent, 1)} %"])
+    if request.includes.body_water:
+        info_data.append(["Total body Water:", f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %"])
+    if request.includes.bmi:
+        info_data.append(["BMI:", round(request.test.test_primary.bmi, 1)])
     
     # Create the info table
     info_table = Table(info_data, colWidths=[200, 180])
@@ -259,8 +271,8 @@ def custom_summary(request):
     story.append(info_table)
     story.append(Spacer(1, 12))
 
-    # Body Fat Displacement (Only if 'segmental_section' is True)
-    if request.includes and request.includes.get('segmental_section'):
+    # Body Fat Displacement
+    if request.includes and request.includes.segmental_section:
         total_fat = request.test.test_primary.body_fat
         segmental_data = [
             ["Body Fat Displacement", "", "", ""],
@@ -282,25 +294,25 @@ def custom_summary(request):
         ]))
         story.append(segmental_table)
         story.append(Spacer(1, 12))
+        # Basal Metabolic Rate
+        basal_data = [
+            ["Basal Metabolic Rate:", f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day"],
+        ]
 
-    # Basal Metabolic Rate (Always included)
-    basal_data = [
-        ["Basal Metabolic Rate:", f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day"],
-    ]
+        basal_table = Table(basal_data, colWidths=[200, 180])
+        basal_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.white)
+        ]))
+        story.append(basal_table)
+        story.append(Spacer(1, 12))
 
-    basal_table = Table(basal_data, colWidths=[200, 180])
-    basal_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.white)
-    ]))
-    story.append(basal_table)
-    story.append(Spacer(1, 12))
 
-    # Activity Section (Only if 'activity_section' is True)
-    if request.includes and request.includes.get('activity_section'):
+    # Activity Section
+    if request.includes and request.includes.activity_section:
         bmr_data = [
             ["Activity Level", "Daily Caloric Needs"],
             ["Very light activity:", f"{int(request.test.test_energy.very_light_activity)} Calories/Day"],

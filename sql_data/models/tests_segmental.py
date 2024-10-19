@@ -12,6 +12,11 @@ class TestSegmental(Base):
     right_leg = Column(Float)
     left_leg = Column(Float)
     torso = Column(Float)
+    right_arm_percent = Column(Float, nullable=True)
+    left_arm_percent = Column(Float, nullable=True)
+    right_leg_percent = Column(Float, nullable=True)
+    left_leg_percent = Column(Float, nullable=True)
+    torso_percent = Column(Float, nullable=True)
     creation_date = Column(DateTime, server_default=func.now())
     
     test = relationship('TestPrimary', back_populates='segmental')
