@@ -6,6 +6,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import win32print, io, os # type: ignore
 from typing import Optional
+from fpdf import FPDF
 
 from sql_data.schemas.tests_primary import TestResponse
 
@@ -42,18 +43,28 @@ def get_printers():
 
 @router.post("/print")
 def print_doc(request: PrintRequest):
+    
+    from_field_value = request.test.test_primary.from_field
+    if ' ' in from_field_value:
+        from_field_value = from_field_value.split()[0]
+    
     if request.printout == 1:
         pdf_bytes = plain_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 6 and request.includes:
         pdf_bytes = custom_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"customSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"customSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+    elif request.printout == 4:
+        pdf_bytes = p111a(request)
+        if not isinstance(pdf_bytes, bytes):
+            raise Exception("Error generating PDF: output is not bytes")
+        temp_file_path = f"p111a_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     else: 
-        temp_file_path = f"plainSummery_{request.test.test_primary.from_field}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
 
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
@@ -336,5 +347,78 @@ def custom_summary(request):
     # Build the PDF document
     doc.build(story)
     pdf_bytes = buffer.getvalue()
+
+    return pdf_bytes
+
+def p111a(request):
+    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    pdf = FPDF()
+    pdf.add_page()
+
+    pdf.set_line_width(0.3)
+    pdf.set_font("Times", size=12)
+
+    pdf.set_text_color(0, 0, 0)  # Black in RGB
+    
+    pdf.set_xy(30, 26)
+    pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
+    
+    pdf.set_xy(30, 36)
+    pdf.cell(40, 10, f"{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
+    
+    pdf.set_xy(50, 31)
+    pdf.cell(40, 10, f"Ohms: {request.test.test_primary.bio_impedance}")
+    
+    pdf.set_xy(23, 56)
+    pdf.cell(40, 10, f"{gender}")
+    
+    pdf.set_xy(37, 56)
+    pdf.cell(40, 10, f"{request.test.test_primary.age}")
+    
+    pdf.set_xy(50, 56)
+    pdf.cell(40, 10, f"{request.test.test_primary.height}")
+    
+    pdf.set_xy(105, 40)
+    pdf.multi_cell(0, 7, f"{round(request.test.test_primary.weight, 1)}Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
+    
+    pdf.set_xy(105, 72)
+    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %")
+
+    pdf.set_xy(105, 130)
+    pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)}")
+
+    pdf.set_xy(145, 42)
+    pdf.cell(40, 10, f"{round(request.test.test_primary.bmi, 1)}")
+    
+    pdf.set_xy(145, 72)
+    pdf.multi_cell(0, 7, f"{round(request.test.test_primary.muscle_mass, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg")
+    
+    pdf.set_xy(180, 72)
+    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
+    
+    pdf.set_xy(140, 130)
+    pdf.cell(0, 5, f"Torso: {round(request.test.test_segmental.torso, 1)} Lbs {round(pounds_to_kg(request.test.test_segmental.torso), 1)} Kg {round(fat_percentage(request.test.test_segmental.torso, request.test.test_primary.body_fat), 1)} %")
+    pdf.set_xy(140, 135)
+    pdf.cell(0, 5, f"Left Leg: {round(request.test.test_segmental.left_leg, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.left_leg), 1)} Kg  {round(fat_percentage(request.test.test_segmental.left_leg, request.test.test_primary.body_fat), 1)} %")
+    pdf.set_xy(140, 140)
+    pdf.cell(0, 5, f"Right Leg: {round(request.test.test_segmental.right_leg, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.right_leg), 1)} Kg  {round(fat_percentage(request.test.test_segmental.right_leg, request.test.test_primary.body_fat), 1)} %")
+    pdf.set_xy(140, 145)
+    pdf.cell(0, 5, f"Left Arm: {round(request.test.test_segmental.left_arm, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.left_arm), 1)} Kg  {round(fat_percentage(request.test.test_segmental.left_arm, request.test.test_primary.body_fat), 1)} %")
+    pdf.set_xy(140, 150)
+    pdf.cell(0, 5, f"Right Arm: {round(request.test.test_segmental.right_arm, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.right_arm), 1)} Kg  {round(fat_percentage(request.test.test_segmental.right_arm, request.test.test_primary.body_fat), 1)} %")
+    
+    pdf.set_xy(103, 190)
+    pdf.cell(40, 10, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day")
+    
+    pdf.set_xy(145, 190)
+    pdf.cell(40, 4, f"Light activity{int(request.test.test_energy.light_activity)} Calories/Day")
+    
+    pdf.set_xy(145, 195)
+    pdf.cell(40, 4, f"Moderate activity{int(request.test.test_energy.moderate_activity)} Calories/Day")
+    
+    pdf.set_xy(145, 200)
+    pdf.cell(40, 4, f"Heavy activity{int(request.test.test_energy.heavy_activity)} Calories/Day")
+    
+    pdf_bytes = bytes(pdf.output(dest='S'))
 
     return pdf_bytes

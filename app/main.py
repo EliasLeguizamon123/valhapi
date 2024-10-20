@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from logging.config import dictConfig
 import os, uvicorn
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import ProgrammingError, OperationalError
 
 from dump import initialize_data
@@ -62,10 +62,9 @@ def run_migrations(engine):
         print("Base de datos ya está actualizada. No es necesario ejecutar migraciones.")
 
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     Base.metadata.create_all(bind=engine)
     initialize_data()
-    run_migrations(engine)
 
 @app.get("/ping")
 def get_current_time():
