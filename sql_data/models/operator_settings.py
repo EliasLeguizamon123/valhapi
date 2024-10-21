@@ -1,4 +1,3 @@
-# sql_data/models/operator_settings.py
 from sql_data.config import Base
 from sqlalchemy import Column, String, Integer, Boolean
 

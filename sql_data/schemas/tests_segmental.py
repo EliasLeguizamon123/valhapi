@@ -8,6 +8,11 @@ class TestSegmentalBase(BaseModel):
     right_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     left_leg: Annotated[float, condecimal(max_digits=6, decimal_places=2)]  
     torso: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
+    right_arm_percent: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
+    left_arm_percent: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
+    right_leg_percent: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
+    left_leg_percent: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
+    torso_percent: Annotated[float, condecimal(max_digits=6, decimal_places=2)]
 
 class TestSegmentalCreate(TestSegmentalBase):
     pass

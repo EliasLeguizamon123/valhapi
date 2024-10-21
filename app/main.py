@@ -3,9 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from logging.config import dictConfig
 import os, uvicorn
+from sqlalchemy import text, inspect
+from sqlalchemy.exc import ProgrammingError, OperationalError
 
 from dump import initialize_data
 from sql_data.config import engine, Base
+from alembic import command
+from alembic.config import Config
 
 from app.routes import members, core_software, operator_settings, tests, printers, scales
 
@@ -32,8 +36,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def is_database_up_to_date(engine) -> bool:
+    alembic_cfg = Config("alembic.ini")
+
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT version_num FROM alembic_version"))
+            db_version = result.scalar()
+    except (ProgrammingError, OperationalError):
+        print("La tabla alembic_version no existe, aplicando todas las migraciones.")
+        return False
+
+    script = command.ScriptDirectory.from_config(alembic_cfg)
+    latest_version = script.get_current_head()
+
+    return db_version == latest_version
+
+def run_migrations(engine):
+    alembic_cfg = Config("alembic.ini")
+    alembic_cfg.attributes['engine'] = engine
+
+    if not is_database_up_to_date(engine):
+        command.upgrade(alembic_cfg, "head")
+    else:
+        print("Base de datos ya está actualizada. No es necesario ejecutar migraciones.")
+
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     Base.metadata.create_all(bind=engine)
     initialize_data()
 
@@ -42,11 +71,8 @@ def get_current_time():
     current_time = datetime.now().isoformat()
     return current_time
 
-
-# Run with pyinstaller
 DEFAULT_PORT = 8000
 
-# Configurar el logger para escribir en un archivo
 log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'valhapi.log')
 
 log_config = {

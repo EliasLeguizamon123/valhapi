@@ -33,7 +33,7 @@ def get_results(com: str, db: Session = Depends(get_db)):
         serial_data = ""
 
         while True:
-            line = serial_port.readline().decode('utf-8').strip()
+            line = serial_port.read_until(b'\r').decode('utf-8').strip()
             if line.startswith("#START"):
                 serial_data = ""
                 continue
@@ -86,7 +86,12 @@ def get_results(com: str, db: Session = Depends(get_db)):
             left_arm=data['left_arm'],
             right_leg=data['right_leg'],
             left_leg=data['left_leg'],
-            torso=data['torso']
+            torso=data['torso'],
+            right_arm_percent=data['right_arm_percent'],
+            left_arm_percent=data['left_arm_percent'],
+            right_leg_percent=data['right_leg_percent'],
+            left_leg_percent=data['left_leg_percent'],
+            torso_percent=data['torso_percent'],
         )
 
         new_test = create_test(db, test_primary, test_energy, test_segmental)

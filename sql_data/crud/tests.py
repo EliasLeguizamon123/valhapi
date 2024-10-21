@@ -105,6 +105,11 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         right_leg=test_segmental.right_leg,
         left_leg=test_segmental.left_leg,
         torso=test_segmental.torso,
+        right_arm_percent=test_segmental.right_arm_percent,
+        left_arm_percent=test_segmental.left_arm_percent,
+        right_leg_percent=test_segmental.right_leg_percent,
+        left_leg_percent=test_segmental.left_leg_percent,
+        torso_percent=test_segmental.torso_percent,
         creation_date=test_primary.creation_date
     )
     db.add(db_test_segmental)
