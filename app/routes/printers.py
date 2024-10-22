@@ -151,7 +151,7 @@ def plain_summary(request):
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
         ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-        ('ALIGN', (1, 3), (-1, -1), 'RIGHT'),
+        ('ALIGN', (1, 2), (-1, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
@@ -364,7 +364,7 @@ def p111a(request):
 
     pdf.set_text_color(0, 0, 0)  # Black in RGB
     
-    pdf.set_xy(30, 26)
+    pdf.set_xy(30, 20)
     pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
     
     pdf.set_xy(30, 36)
@@ -411,16 +411,16 @@ def p111a(request):
     pdf.set_xy(140, 150)
     pdf.cell(0, 5, f"Right Arm: {round(request.test.test_segmental.right_arm, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.right_arm), 1)} Kg  {round(fat_percentage(request.test.test_segmental.right_arm, request.test.test_primary.body_fat), 1)} %")
     
-    pdf.set_xy(103, 190)
+    pdf.set_xy(103, 195)
     pdf.cell(40, 10, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day")
     
-    pdf.set_xy(145, 190)
+    pdf.set_xy(145, 195)
     pdf.cell(40, 4, f"Light activity{int(request.test.test_energy.light_activity)} Calories/Day")
     
-    pdf.set_xy(145, 195)
+    pdf.set_xy(145, 199)
     pdf.cell(40, 4, f"Moderate activity{int(request.test.test_energy.moderate_activity)} Calories/Day")
     
-    pdf.set_xy(145, 200)
+    pdf.set_xy(145, 203)
     pdf.cell(40, 4, f"Heavy activity{int(request.test.test_energy.heavy_activity)} Calories/Day")
     
     pdf_bytes = bytes(pdf.output(dest='S'))
@@ -436,13 +436,13 @@ def p511a(request):
     pdf.set_font("Times", size=12)
     pdf.set_text_color(0, 0, 0)
     
-    pdf.set_xy(30, 26)
+    pdf.set_xy(30, 23)
     pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
     
-    pdf.set_xy(110, 26)
+    pdf.set_xy(110, 23)
     pdf.cell(40, 10, f"{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
     
-    pdf.set_xy(20, 57)
+    pdf.set_xy(10, 57)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
     
     pdf.set_xy(40, 57)
@@ -460,13 +460,13 @@ def p511a(request):
     pdf.set_xy(120, 57)
     pdf.cell(40, 10, f"{round(request.test.test_primary.bmi, 1)}")
     
-    pdf.set_xy(20, 97)
+    pdf.set_xy(10, 97)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %")
     
     pdf.set_xy(65, 97)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.muscle_mass, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg")
     
-    pdf.set_xy(120, 97)
+    pdf.set_xy(105, 97)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
     
     pdf.set_xy(20, 130)
