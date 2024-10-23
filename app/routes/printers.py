@@ -7,6 +7,7 @@ from reportlab.lib import colors
 import win32print, io, os # type: ignore
 from typing import Optional
 from fpdf import FPDF
+from PyPDF2 import PdfReader, PdfWriter
 
 from sql_data.schemas.tests_primary import TestResponse
 
@@ -53,6 +54,11 @@ def print_doc(request: PrintRequest):
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+    elif request.printout == 2 or request.printout == 3:
+        pdf_bytes = combine_pdf(p055b(request), plain_summary(request))
+        if not isinstance(pdf_bytes, bytes):
+            raise Exception("Error generating PDF: output is not bytes")
+        temp_file_path = f"p055b_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 4:
         pdf_bytes = p111a(request)
         if not isinstance(pdf_bytes, bytes):
@@ -495,3 +501,23 @@ def p511a(request):
     
     pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
+
+def p055b(request):
+    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    parts = request.test.test_primary.height.split(" ")
+    formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Times", size=12)
+    pdf.set_text_color(0, 0, 0)
+    
+    pdf.set_xy(30, 23)
+    pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
+    
+    pdf_bytes = bytes(pdf.output(dest='S'))
+    return pdf_bytes
+
+def combine_pdf(pdf1: bytes, pdf2: bytes) -> bytes:
+    final_pdf = pdf1 + pdf2
+    
+    return final_pdf
