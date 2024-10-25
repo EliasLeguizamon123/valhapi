@@ -53,7 +53,7 @@ def print_doc(request: PrintRequest):
         pdf_bytes = plain_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 2 or request.printout == 3:
         pdf_bytes = combine_pdf(p055b(request), plain_summary(request))
         if not isinstance(pdf_bytes, bytes):
@@ -73,9 +73,9 @@ def print_doc(request: PrintRequest):
         pdf_bytes = custom_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"customSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"customSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     else: 
-        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
 
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
@@ -117,7 +117,7 @@ def plain_summary(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
     
@@ -236,7 +236,7 @@ def custom_summary(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
 
@@ -362,11 +362,11 @@ def custom_summary(request):
     return pdf_bytes
 
 def p111a(request):
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     pdf = FPDF()
     pdf.add_page()
 
-    pdf.set_font("Times", size=12)
+    pdf.set_font("Helvetica", size=10)
 
     pdf.set_text_color(0, 0, 0)  # Black in RGB
     
@@ -434,12 +434,12 @@ def p111a(request):
     return pdf_bytes
 
 def p511a(request):
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Times", size=12)
+    pdf.set_font("Helvetica", size=10)
     pdf.set_text_color(0, 0, 0)
     
     pdf.set_xy(30, 23)
@@ -503,12 +503,12 @@ def p511a(request):
     return pdf_bytes
 
 def p055b(request):
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Times", size=12)
+    pdf.set_font("Helvetica", size=10)
     pdf.set_text_color(0, 0, 0)
     
     pdf.set_xy(30, 80)

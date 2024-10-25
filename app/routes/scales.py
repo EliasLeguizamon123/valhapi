@@ -99,7 +99,7 @@ def get_results(com: str, db: Session = Depends(get_db)):
         print('Test created', new_test)
         return new_test
     except serial.SerialException as e:
-        raise HTTPException(status_code=404, detail="serial port COM3 not found")
+        raise HTTPException(status_code=404, detail=f"serial port {com} not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{e}")
 
