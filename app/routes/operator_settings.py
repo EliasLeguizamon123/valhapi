@@ -59,5 +59,6 @@ def get_default_operator_settings(db: Session = Depends(get_db)):
     ports = serial.tools.list_ports.comports()
     serial_ports = [port.device for port in ports]
     
+    
     # return defaults
     return Defaults(printers=printers, operator_settings=operator_settings, scale_connector=serial_ports)

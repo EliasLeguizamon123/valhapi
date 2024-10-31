@@ -7,6 +7,7 @@ from reportlab.lib import colors
 import win32print, io, os # type: ignore
 from typing import Optional
 from fpdf import FPDF
+from pypdf import PdfWriter
 
 from sql_data.schemas.tests_primary import TestResponse
 
@@ -52,7 +53,12 @@ def print_doc(request: PrintRequest):
         pdf_bytes = plain_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+    elif request.printout == 2 or request.printout == 3:
+        pdf_bytes = combine_pdf(p055b(request), plain_summary(request))
+        if not isinstance(pdf_bytes, bytes):
+            raise Exception("Error generating PDF: output is not bytes")
+        temp_file_path = f"p055b_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 4:
         pdf_bytes = p111a(request)
         if not isinstance(pdf_bytes, bytes):
@@ -67,9 +73,9 @@ def print_doc(request: PrintRequest):
         pdf_bytes = custom_summary(request)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
-        temp_file_path = f"customSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"customSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     else: 
-        temp_file_path = f"plainSummery_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
+        temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
 
     with open(temp_file_path, "wb") as f:
         print(f"Writing to file {temp_file_path}")
@@ -111,7 +117,7 @@ def plain_summary(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
     
@@ -230,7 +236,7 @@ def custom_summary(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
 
@@ -356,11 +362,11 @@ def custom_summary(request):
     return pdf_bytes
 
 def p111a(request):
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     pdf = FPDF()
     pdf.add_page()
 
-    pdf.set_font("Times", size=12)
+    pdf.set_font("Helvetica", size=10)
 
     pdf.set_text_color(0, 0, 0)  # Black in RGB
     
@@ -428,12 +434,12 @@ def p111a(request):
     return pdf_bytes
 
 def p511a(request):
-    gender = "M" if request.test.test_primary.gender == 1 else "F"
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Times", size=12)
+    pdf.set_font("Helvetica", size=10)
     pdf.set_text_color(0, 0, 0)
     
     pdf.set_xy(30, 23)
@@ -495,3 +501,81 @@ def p511a(request):
     
     pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
+
+def p055b(request):
+    gender = "M" if request.test.test_primary.gender == 0 else "F"
+    parts = request.test.test_primary.height.split(" ")
+    formatted_height = f"{parts[0]} {parts[1]}\n{parts[2]}"
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=10)
+    pdf.set_text_color(0, 0, 0)
+    
+    pdf.set_xy(30, 80)
+    pdf.multi_cell(0, 7, f"Assessment prepared by\n{request.test.test_primary.by_field}")
+    
+    pdf.set_xy(30, 100)
+    pdf.multi_cell(0, 7, f"Assessment prepared for\n{request.test.test_primary.from_field}")
+    
+    pdf.set_xy(130, 80)
+    pdf.multi_cell(0, 7, f"Date:\n{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
+    
+    pdf.set_xy(130, 100)
+    pdf.multi_cell(0, 7, f"ID No\n#{request.test.test_primary.test_id}")
+    
+    pdf.set_xy(30, 115)
+    pdf.cell(40, 10, f"Current body weight:    {round(request.test.test_primary.weight, 1)} Lbs {round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
+    
+    pdf.set_xy(30, 125)
+    pdf.cell(40, 10, f"Body Mass Index:    {round(request.test.test_primary.bmi, 1)}")
+    
+    pdf.set_xy(30, 135)
+    pdf.cell(40, 10, f"Gender: {gender}")
+    
+    pdf.set_xy(80, 135)
+    pdf.multi_cell(0, 7, f"Hgt: {formatted_height}")
+    
+    pdf.set_xy(130, 135)
+    pdf.cell(40, 10, f"Age: {request.test.test_primary.age}")
+    
+    pdf.set_xy(140, 170)
+    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs \n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg \n{round(request.test.test_primary.body_fat_percent, 1)} %")
+    
+    pdf.set_xy(170, 170)
+    pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)} VF")
+    
+    pdf.set_xy(170, 177)
+    pdf.multi_cell(0, 5, "Visceral Fat Ranges\nNormal:    1 - 9\nHigh:    10 - 14\nVery High:    15+")
+    
+    pdf.set_xy(140, 217)
+    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
+    
+    pdf.add_page() # Second page
+    
+    pdf.set_xy(120, 155)
+    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.lean_mass, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.lean_mass), 1)} Kg\n{round(request.test.test_primary.lean_mass_percent, 1)} %")
+    
+    pdf.add_page() # Third page
+    
+    pdf.set_xy(130, 10)
+    pdf.multi_cell(0, 7, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day required to \nmaintain vital body functions")
+    
+    pdf.set_xy(130, 230)
+    pdf.multi_cell(0, 5, f"Very Light Activity: {int(request.test.test_energy.very_light_activity)} Calories/Day\nLight Activity: {int(request.test.test_energy.light_activity)} Calories/Day\nModerate Activity: {int(request.test.test_energy.moderate_activity)} Calories/Day\nHeavy Activity: {int(request.test.test_energy.heavy_activity)} Calories/Day\nVery Heavy Activity: {int(request.test.test_energy.very_heavy_activity)} Calories/Day")
+    
+    pdf.add_page() # Fourth page
+    
+    pdf.set_xy(60, 90)
+    pdf.cell(40, 10, f"You are {round(request.test.test_primary.aiw, 1)}% over your ideal weight.")
+    
+    pdf_bytes = bytes(pdf.output(dest='S'))
+    return pdf_bytes
+
+def combine_pdf(pdf1: bytes, pdf2: bytes) -> bytes:
+    merger = PdfWriter()
+    merger.append(io.BytesIO(pdf1))
+    merger.append(io.BytesIO(pdf2))
+    output = io.BytesIO()
+    merger.write(output)
+    merger.close()
+    return output.getvalue()

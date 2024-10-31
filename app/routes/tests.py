@@ -76,7 +76,7 @@ def get_tests_csv(member_id: str, db: Session = Depends(get_db)):
     
     
     for test in tests:
-        gender = "M" if test['test_primary'].gender == "1" else "F"
+        gender = "M" if test['test_primary'].gender == "0" else "F"
         formatted_date = test['test_primary'].creation_date.strftime('%Y-%m-%d')
         writer.writerow([
             formatted_date,
