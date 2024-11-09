@@ -141,13 +141,13 @@ def process_serial_data(data: str) -> Dict:
                     values['bio_impedance'] = float(clean_value)
                 elif key == "VF(#)":
                     values['visceral_fat'] = float(clean_value)
-                elif key == "FFM(lbs)":
+                elif key == "FFM(lb)":
                     values['lean_mass'] = float(clean_value)
                 elif key == "FFM(kg)":
                     values['lean_mass_kg'] = float(clean_value)
                 elif key == "FFM(%)":
                     values['lean_mass_percent'] = float(clean_value)
-                elif key == "TBW(lbs)":
+                elif key == "TBW(lb)":
                     values['body_water'] = float(clean_value)
                 elif key == "TBW(kg)":
                     values['body_water_kg'] = float(clean_value)

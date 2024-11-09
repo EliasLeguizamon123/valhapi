@@ -14,7 +14,7 @@ def init_db(db: Session):
     
     if db.query(OperatorSettings).first() is None:
         operator_settings = OperatorSettings(
-            measure='Metric',
+            measure='Imperial',
             business='Medical',
             collation='Tray',
             company_name='',
