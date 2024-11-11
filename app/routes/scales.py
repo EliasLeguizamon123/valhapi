@@ -29,7 +29,7 @@ def get_db():
 @router.get("/get_results")
 def get_results(com: str, db: Session = Depends(get_db)):
     try:
-        serial_port = serial.Serial(com, 115200, timeout=40)
+        serial_port = serial.Serial(com, 115200, timeout=120)
         serial_data = ""
 
         while True:
@@ -52,13 +52,16 @@ def get_results(com: str, db: Session = Depends(get_db)):
 
         test_primary = TestPrimaryCreate(
             body_fat=data['body_fat'],
+            body_fat_kg=data['body_fat_kg'],
             body_fat_percent=data['body_fat_percent'],
             bio_impedance=data['bio_impedance'],
             visceral_fat=data['visceral_fat'],
             lean_mass=data['lean_mass'],
+            lean_mass_kg=data['lean_mass_kg'],
             lean_mass_percent=data['lean_mass_percent'],
             muscle_mass=data['muscle_mass'],
             body_water=data['body_water'],
+            body_water_kg=data['body_water_kg'],
             body_water_percent=data['body_water_percent'],
             bmi=data['bmi'],
             weight=data['weight'],
@@ -99,7 +102,7 @@ def get_results(com: str, db: Session = Depends(get_db)):
         print('Test created', new_test)
         return new_test
     except serial.SerialException as e:
-        raise HTTPException(status_code=404, detail=f"serial port {com} not found")
+        raise HTTPException(status_code=404, detail=f"serial port {com} error, more details: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{e}")
 
@@ -128,20 +131,26 @@ def process_serial_data(data: str) -> Dict:
                     inches = clean_value
                 elif key == "Hgt(cm)":
                     cm = clean_value
-                elif key == "BF(kg)":
+                elif key == "BF(lb)":
                     values['body_fat'] = float(clean_value)
+                elif key == "BF(kg)":
+                    values['body_fat_kg'] = float(clean_value)
                 elif key == "BF(%)":
                     values['body_fat_percent'] = float(clean_value)
                 elif key == "Ohms":
                     values['bio_impedance'] = float(clean_value)
                 elif key == "VF(#)":
                     values['visceral_fat'] = float(clean_value)
-                elif key == "FFM(kg)":
+                elif key == "FFM(lb)":
                     values['lean_mass'] = float(clean_value)
+                elif key == "FFM(kg)":
+                    values['lean_mass_kg'] = float(clean_value)
                 elif key == "FFM(%)":
                     values['lean_mass_percent'] = float(clean_value)
-                elif key == "TBW(kg)":
+                elif key == "TBW(lb)":
                     values['body_water'] = float(clean_value)
+                elif key == "TBW(kg)":
+                    values['body_water_kg'] = float(clean_value)
                 elif key == "TBW(%)":
                     values['body_water_percent'] = float(clean_value)
                 elif key == "BMI":
@@ -183,9 +192,9 @@ def process_serial_data(data: str) -> Dict:
                 elif key == "AIW(%)":
                     values['aiw'] = float(clean_value)
                 elif key == "Provider ID":
-                    values['from_field'] = clean_value
+                    values['from_field'] = clean_value or '-'
                 elif key == "Patient ID":
-                    values['by_field'] = clean_value
+                    values['by_field'] = clean_value or '-'
                 elif key == "Gender":
                     values['gender'] = int(clean_value)
                 elif key == "Age":

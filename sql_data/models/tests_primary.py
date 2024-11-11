@@ -26,6 +26,9 @@ class TestPrimary(Base):
     lean_mass_percent = Column(Float, nullable=True)
     body_water_percent = Column(Float, nullable=True)
     body_fat_percent = Column(Float, nullable=True)
+    body_fat_kg = Column(Float, nullable=True)
+    lean_mass_kg = Column(Float, nullable=True)
+    body_water_kg = Column(Float, nullable=True)
     
     member = relationship('Member', back_populates='tests')
     energy = relationship('TestEnergy', back_populates='test', uselist=False, cascade='all, delete-orphan')

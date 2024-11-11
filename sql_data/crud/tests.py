@@ -79,6 +79,9 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         lean_mass_percent=test_primary.lean_mass_percent,
         body_water_percent=test_primary.body_water_percent,
         body_fat_percent=test_primary.body_fat_percent,
+        body_fat_kg=test_primary.body_fat_kg,
+        lean_mass_kg=test_primary.lean_mass_kg,
+        body_water_kg=test_primary.body_water_kg
     )
     db.add(db_test_primary)
     db.commit()

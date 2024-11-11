@@ -24,6 +24,9 @@ class TestPrimaryBase(BaseModel):
     lean_mass_percent: Optional[float] = None
     body_water_percent: Optional[float] = None
     body_fat_percent: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
+    body_fat_kg: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
+    lean_mass_kg: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
+    body_water_kg: Annotated[float, condecimal(max_digits=5, decimal_places=2)]
 
 class TestPrimaryCreate(TestPrimaryBase):
     creation_date: Optional[datetime] = None

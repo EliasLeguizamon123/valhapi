@@ -14,12 +14,12 @@ def init_db(db: Session):
     
     if db.query(OperatorSettings).first() is None:
         operator_settings = OperatorSettings(
-            measure='Metric',
+            measure='Imperial',
             business='Medical',
             collation='Tray',
             company_name='',
             selected_printer='',
-            includes = """{"body_fat": true,"weight": true,"ohms": true,"bio_impedance": true,"visceral_fat": true,"muscle_mass": true,"lean_mass": true,"body_water": true,"bmi": true,"activity_section": true,"segmental_section": true}""",
+            includes = """{"body_fat": true,"weight": true,"basal_metabolic_rate": true,"bio_impedance": true,"visceral_fat": true,"muscle_mass": true,"lean_mass": true,"body_water": true,"bmi": true,"activity_section": true,"segmental_section": true}""",
             com='COM3',
             test2=False,
             test3=False,
