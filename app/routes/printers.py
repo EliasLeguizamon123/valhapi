@@ -562,17 +562,20 @@ def p511a(request):
 def p055b(request):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
-    formatted_height = f"{parts[0]} {parts[1]}\n{parts[2][:-2]} cm"
+    formatted_height = f"{parts[0]} {parts[1]} {parts[2][:-2]} cm"
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=10)
     pdf.set_text_color(0, 0, 0)
     
     pdf.set_xy(30, 80)
-    pdf.multi_cell(0, 7, f"Assessment prepared by\n{request.test.test_primary.by_field}")
+    pdf.multi_cell(0, 7, f"Assessment Prepared By\n{request.test.test_primary.by_field}")
+    
+    pdf.set_xy(30, 90)
+    pdf.cell(40, 10, f"Italic clinic") # TODO: Company name
     
     pdf.set_xy(30, 100)
-    pdf.multi_cell(0, 7, f"Assessment prepared for\n{request.test.test_primary.from_field}")
+    pdf.multi_cell(0, 7, f"Assessment Prepared For\n{request.test.test_primary.from_field}")
     
     pdf.set_xy(130, 80)
     pdf.multi_cell(0, 7, f"Date:\n{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
@@ -581,7 +584,7 @@ def p055b(request):
     pdf.multi_cell(0, 7, f"ID No\n#{request.test.test_primary.test_id}")
     
     pdf.set_xy(30, 115)
-    pdf.cell(40, 10, f"Current body weight:    {round(request.test.test_primary.weight, 1)} Lbs {round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
+    pdf.cell(40, 10, f"Current Body Weight:    {round(request.test.test_primary.weight, 1)} Lbs {round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
     
     pdf.set_xy(30, 125)
     pdf.cell(40, 10, f"Body Mass Index:    {round(request.test.test_primary.bmi, 1)}")
