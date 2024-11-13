@@ -27,3 +27,7 @@ def update_member(db: Session, member: MemberCreate):
     db.commit()
     return db.query(MemberModel).filter(MemberModel.id == member.id).first()
 
+def delete_member_by_id(db: Session, member_id: str):
+    db.query(MemberModel).filter(MemberModel.id == member_id).delete()
+    db.commit()
+    return {"message": "Member deleted successfully"}

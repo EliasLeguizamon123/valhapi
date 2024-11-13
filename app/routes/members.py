@@ -73,3 +73,12 @@ def modify_member(member_id: str, member: MemberCreate, db: Session = Depends(ge
     if member_id != member.id:
         raise HTTPException(status_code=400, detail="Member ID cannot be modified")
     return update_member(db, member)
+
+@router.delete("/{member_id}")
+def delete_member(member_id: str, db: Session = Depends(get_db)):
+    db_member = get_member(db, member_id=member_id)
+    if db_member is None:
+        raise HTTPException(status_code=404, detail="Member not found")
+    db.query(MemberModel).filter(MemberModel.id == member_id).delete()
+    db.commit()
+    return {"message": "Member deleted successfully"}
