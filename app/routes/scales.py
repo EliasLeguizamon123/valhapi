@@ -72,7 +72,7 @@ def get_results(com: str, db: Session = Depends(get_db)):
             from_field=data['from_field'],
             by_field=data['by_field'],
             member_id=data['from_field'] or None,
-            creation_date=datetime.utcnow()
+            creation_date=datetime.now().astimezone()
         )
         
         test_energy = TestEnergyCreate(
@@ -107,7 +107,10 @@ def get_results(com: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"{e}")
 
 def process_serial_data(data: str) -> Dict:
-    values = {}
+    values = {
+        "from_field": "-",  # Default for Provider ID
+        "by_field": "-",    # Default for Patient ID
+    }
     feet, inches, cm = None, None, None
 
     for line in data.split('\n'):

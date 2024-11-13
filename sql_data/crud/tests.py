@@ -31,7 +31,7 @@ def get_all_tests_of_member(db: Session, member_id: str):
                 moderate_activity=0,
                 heavy_activity=0,
                 very_heavy_activity=0,
-                creation_date=datetime.utcnow()
+                creation_date=datetime.now().astimezone()
             )
 
         if not test_segmental:
@@ -42,7 +42,7 @@ def get_all_tests_of_member(db: Session, member_id: str):
                 right_leg=0,
                 left_leg=0,
                 torso=0,
-                creation_date=datetime.utcnow()
+                creation_date=datetime.now().astimezone()
             )
 
         response.append({
@@ -71,7 +71,7 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         height=test_primary.height,
         age=test_primary.age,
         member_id=test_primary.member_id,
-        creation_date=datetime.utcnow(),
+        creation_date=datetime.now().astimezone(),
         from_field=test_primary.from_field,
         by_field=test_primary.by_field,
         aiw=test_primary.aiw,

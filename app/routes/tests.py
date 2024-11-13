@@ -49,7 +49,7 @@ def create_member_test(
 ):
     try:
         test_primary.member_id = member_id
-        test_primary.creation_date = datetime.utcnow()
+        test_primary.creation_date = datetime.now().astimezone()
 
         new_test = create_test(db, test_primary, test_energy, test_segmental)
         return new_test
