@@ -69,9 +69,9 @@ def get_results(com: str, db: Session = Depends(get_db)):
             aiw=data['aiw'],
             age=data['age'],
             gender=int(data['gender']),
-            from_field=data['from_field'],
-            by_field=data['by_field'],
-            member_id=data['from_field'] or None,
+            # from_field=data['from_field'],
+            # by_field=data['by_field'],
+            # member_id=data['from_field'],
             creation_date=datetime.now().astimezone()
         )
         
@@ -99,7 +99,6 @@ def get_results(com: str, db: Session = Depends(get_db)):
 
         new_test = create_test(db, test_primary, test_energy, test_segmental)
         
-        print('Test created', new_test)
         return new_test
     except serial.SerialException as e:
         raise HTTPException(status_code=404, detail=f"serial port {com} error, more details: {e}")

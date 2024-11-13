@@ -71,7 +71,7 @@ def create_test(db: Session, test_primary: TestPrimaryCreate, test_energy: TestE
         height=test_primary.height,
         age=test_primary.age,
         member_id=test_primary.member_id,
-        creation_date=datetime.now().astimezone(),
+        creation_date=test_primary.creation_date,
         from_field=test_primary.from_field,
         by_field=test_primary.by_field,
         aiw=test_primary.aiw,
