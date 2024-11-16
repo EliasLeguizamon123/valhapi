@@ -47,6 +47,8 @@ def get_results(com: str, db: Session = Depends(get_db)):
 
         data = process_serial_data(serial_data)
         
+        print(f"From {data['from_field']}")
+        
         if not data:
             return {"error": "Failed to parse serial data"}
 
@@ -69,9 +71,9 @@ def get_results(com: str, db: Session = Depends(get_db)):
             aiw=data['aiw'],
             age=data['age'],
             gender=int(data['gender']),
-            from_field=data['from_field'],
+            from_field=data['from_field'] or '-',
             by_field=data['by_field'],
-            member_id=data['from_field'] or None,
+            member_id=data['from_field'] or '-',
             creation_date=datetime.utcnow()
         )
         
@@ -204,5 +206,10 @@ def process_serial_data(data: str) -> Dict:
 
     if feet is not None and inches is not None and cm is not None:
         values['height'] = f"{feet}' {inches}\" {cm}cm"
+        
+    if 'from_field' not in values:
+        values['from_field'] = '-'
+    if 'by_field' not in values:
+        values['by_field'] = '-'
     
     return values
