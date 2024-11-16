@@ -101,7 +101,6 @@ def get_results(com: str, db: Session = Depends(get_db)):
 
         new_test = create_test(db, test_primary, test_energy, test_segmental)
         
-        print('Test created', new_test)
         return new_test
     except serial.SerialException as e:
         raise HTTPException(status_code=404, detail=f"serial port {com} error, more details: {e}")
@@ -109,7 +108,10 @@ def get_results(com: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"{e}")
 
 def process_serial_data(data: str) -> Dict:
-    values = {}
+    values = {
+        "from_field": "-",  # Default for Provider ID
+        "by_field": "-",    # Default for Patient ID
+    }
     feet, inches, cm = None, None, None
 
     for line in data.split('\n'):
