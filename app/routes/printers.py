@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException
+from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
@@ -10,7 +12,10 @@ from typing import Optional
 from fpdf import FPDF
 from pypdf import PdfWriter
 
+from sql_data.config import SessionLocal
 from sql_data.schemas.tests_primary import TestResponse
+from sql_data.schemas.operator_settings import OperatorSettings, OperatorSettingsCreate
+from sql_data.models.operator_settings import OperatorSettings as OperatorSettingsModel
 
 router = APIRouter()
 
@@ -32,6 +37,13 @@ class PrintRequest(BaseModel):
     printer_name: str
     test: TestResponse
     includes: Optional[Includes] = None
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @router.get("/")
 def get_printers():
@@ -44,19 +56,20 @@ def get_printers():
     return {"printers": printers}
 
 @router.post("/print")
-def print_doc(request: PrintRequest):
+def print_doc(request: PrintRequest, db: Session = Depends(get_db)):
+    operator_settings = db.query(OperatorSettingsModel).first()
     
     from_field_value = request.test.test_primary.from_field
     if ' ' in from_field_value:
         from_field_value = from_field_value.split()[0]
     
     if request.printout == 1:
-        pdf_bytes = plain_summary(request)
+        pdf_bytes = plain_summary(request, operator_settings.company_name)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 2 or request.printout == 3:
-        pdf_bytes = combine_pdf(p055b(request), plain_summary(request))
+        pdf_bytes = combine_pdf(p055b(request, operator_settings.company_name), plain_summary(request, operator_settings.company_name))
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"p055b_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
@@ -71,7 +84,7 @@ def print_doc(request: PrintRequest):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"p511a_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 6 and request.includes:
-        pdf_bytes = custom_summary(request)
+        pdf_bytes = custom_summary(request, operator_settings.company_name)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"customSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
@@ -85,15 +98,26 @@ def print_doc(request: PrintRequest):
     try:
         printer_name = request.printer_name
         appdata_path = os.getenv('APPDATA')
+        reverse = True if operator_settings.collation == 'Top Load' else False
         pdf_to_printer_path = os.path.join(appdata_path, 'Valhalla', 'PDFToPrinter.exe')
-        print(f"PDFToPrinter.exe path: {pdf_to_printer_path}")
+        print(f"PDFToPrinter.exe path: {pdf_to_printer_path}, {reverse}")
 
         if not os.path.exists(pdf_to_printer_path):
             raise HTTPException(status_code=404, detail="PDFToPrinter.exe not found in the specified path")
 
         print(f"Printing in {pdf_to_printer_path}")
+        
+        page_range = "z-1" if reverse else ""
+        
+        command = f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\""
+        
+        print (f"command: {command}")
+        if page_range:
+            command += f" pages={page_range}"
+        
+        result = os.system(command)
 
-        result = os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
+        # result = os.system(f"{pdf_to_printer_path} /s {temp_file_path} \"{printer_name}\"")
         if result != 0:
             raise Exception(f"Error executing print command, result code: {result}")
 
@@ -110,7 +134,7 @@ def print_doc(request: PrintRequest):
 def pounds_to_kg(pounds: float) -> float:
     return round(pounds * 0.453592, 2)
 
-def plain_summary(request):
+def plain_summary(request, company_name=""):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
@@ -118,6 +142,15 @@ def plain_summary(request):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2][:-2]} cm"
+    
+    styles.add(ParagraphStyle(
+        name='CompanyName',
+        fontName='Helvetica-Bold',
+        fontSize=12,               
+        textColor=colors.red,    
+        alignment=1,               
+        spaceAfter=12              
+    ))
     
     # Title
     title_data = [
@@ -133,6 +166,7 @@ def plain_summary(request):
     story.append(Spacer(1, -1 * cm))
     story.append(title_table)
     story.append(Paragraph(f"BODY COMPOSITION REPORT", styles['Title']))
+    story.append(Paragraph(f"{company_name}", styles['CompanyName']))
     story.append(Spacer(1, 12))
 
     # Info general
@@ -232,7 +266,7 @@ def plain_summary(request):
     
     return pdf_bytes
 
-def custom_summary(request):
+def custom_summary(request, company_name=""):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
@@ -240,6 +274,15 @@ def custom_summary(request):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2][:-2]} cm"
+    
+    styles.add(ParagraphStyle(
+        name='CompanyName',
+        fontName='Helvetica-Bold',
+        fontSize=12,               
+        textColor=colors.red,    
+        alignment=1,               
+        spaceAfter=12              
+    ))
 
     # Title
     title_data = [
@@ -255,6 +298,7 @@ def custom_summary(request):
     story.append(Spacer(1, -1 * cm))
     story.append(title_table)
     story.append(Paragraph("BODY COMPOSITION REPORT", styles['Title']))
+    story.append(Paragraph(f"{company_name}", styles['CompanyName']))
     story.append(Spacer(1, 12))
 
     # General Info
@@ -559,7 +603,7 @@ def p511a(request):
     pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
     return pdf_bytes
 
-def p055b(request):
+def p055b(request, company_name=""):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]} {parts[2][:-2]} cm"
@@ -572,7 +616,7 @@ def p055b(request):
     pdf.multi_cell(0, 7, f"Assessment Prepared By\n{request.test.test_primary.by_field}")
     
     pdf.set_xy(30, 90)
-    pdf.cell(40, 10, f"Italic clinic") # TODO: Company name
+    pdf.cell(40, 10, f"{company_name}") # TODO: Company name
     
     pdf.set_xy(30, 100)
     pdf.multi_cell(0, 7, f"Assessment Prepared For\n{request.test.test_primary.from_field}")
@@ -583,29 +627,29 @@ def p055b(request):
     pdf.set_xy(130, 100)
     pdf.multi_cell(0, 7, f"ID No\n#{request.test.test_primary.test_id}")
     
-    pdf.set_xy(30, 115)
+    pdf.set_xy(30, 125)
     pdf.cell(40, 10, f"Current Body Weight:    {round(request.test.test_primary.weight, 1)} Lbs {round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
     
-    pdf.set_xy(30, 125)
+    pdf.set_xy(30, 135)
     pdf.cell(40, 10, f"Body Mass Index:    {round(request.test.test_primary.bmi, 1)}")
     
-    pdf.set_xy(30, 135)
+    pdf.set_xy(30, 115)
     pdf.cell(40, 10, f"Gender: {gender}")
     
-    pdf.set_xy(80, 135)
+    pdf.set_xy(80, 115)
     pdf.multi_cell(0, 7, f"Hgt: {formatted_height}")
     
-    pdf.set_xy(130, 135)
+    pdf.set_xy(130, 113)
     pdf.cell(40, 10, f"Age: {request.test.test_primary.age}")
     
-    pdf.set_xy(140, 170)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs \n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg \n{round(request.test.test_primary.body_fat_percent, 1)} %")
+    pdf.set_xy(140, 165)
+    pdf.multi_cell(0, 3.5, f"{round(request.test.test_primary.body_fat, 1)} Lbs \n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg \n{round(request.test.test_primary.body_fat_percent, 1)} %")
     
-    pdf.set_xy(170, 170)
+    pdf.set_xy(140, 172)
     pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)} VF")
     
-    pdf.set_xy(170, 177)
-    pdf.multi_cell(0, 5, "Visceral Fat Ranges\nNormal:    1 - 9\nHigh:    10 - 14\nVery High:    15+")
+    pdf.set_xy(140, 179)
+    pdf.multi_cell(0, 4, "Visceral Fat Ranges \nNormal:    1 - 9\nHigh:    10 - 14\nVery High:    15+")
     
     pdf.set_xy(140, 217)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
