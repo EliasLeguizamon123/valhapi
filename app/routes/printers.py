@@ -147,7 +147,7 @@ def plain_summary(request, company_name=""):
         name='CompanyName',
         fontName='Helvetica-Bold',
         fontSize=12,               
-        textColor=colors.red,    
+        textColor=colors.black,    
         alignment=1,               
         spaceAfter=12              
     ))
@@ -279,7 +279,7 @@ def custom_summary(request, company_name=""):
         name='CompanyName',
         fontName='Helvetica-Bold',
         fontSize=12,               
-        textColor=colors.red,    
+        textColor=colors.black,    
         alignment=1,               
         spaceAfter=12              
     ))
@@ -523,7 +523,7 @@ def p511a(request):
     pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
     
     pdf.set_xy(30, 30)
-    pdf.cell(40, 10, f"#{request.test.test_primary.test_id}")
+    pdf.cell(40, 10, f"#{request.test.test_primary.member_id}")
     
     pdf.set_xy(110, 23)
     pdf.cell(40, 10, f"{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
@@ -616,7 +616,7 @@ def p055b(request, company_name=""):
     pdf.multi_cell(0, 7, f"Assessment Prepared By\n{request.test.test_primary.by_field}")
     
     pdf.set_xy(30, 90)
-    pdf.cell(40, 10, f"{company_name}") # TODO: Company name
+    pdf.cell(40, 10, f"{company_name}")
     
     pdf.set_xy(30, 100)
     pdf.multi_cell(0, 7, f"Assessment Prepared For\n{request.test.test_primary.from_field}")
@@ -625,7 +625,7 @@ def p055b(request, company_name=""):
     pdf.multi_cell(0, 7, f"Date:\n{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
     
     pdf.set_xy(130, 100)
-    pdf.multi_cell(0, 7, f"ID No\n#{request.test.test_primary.test_id}")
+    pdf.multi_cell(0, 7, f"ID No\n#{request.test.test_primary.member_id}")
     
     pdf.set_xy(30, 125)
     pdf.cell(40, 10, f"Current Body Weight:    {round(request.test.test_primary.weight, 1)} Lbs {round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
