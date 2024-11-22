@@ -34,6 +34,7 @@ class TestPrimaryCreate(TestPrimaryBase):
     pass
 
 class TestPrimary(TestPrimaryBase):
+    member_id: int
     test_id: int
     creation_date: datetime
 
