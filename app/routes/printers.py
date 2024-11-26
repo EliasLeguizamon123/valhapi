@@ -508,21 +508,21 @@ def p055b(request, company_name=""):
     pdf.cell(40, 10, f"Gender: {gender}")
     
     pdf.set_xy(80, 115)
-    pdf.multi_cell(0, 7, f"Hgt: {formatted_height}")
+    pdf.cell(40, 10, f"Hgt: {formatted_height}")
     
-    pdf.set_xy(130, 113)
+    pdf.set_xy(130, 115)
     pdf.cell(40, 10, f"Age: {request.test.test_primary.age}")
     
     pdf.set_xy(140, 165)
     pdf.multi_cell(0, 3.5, f"{round(request.test.test_primary.body_fat, 1)} Lbs \n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg \n{round(request.test.test_primary.body_fat_percent, 1)} %")
     
-    pdf.set_xy(140, 172)
+    pdf.set_xy(140, 175)
     pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)} VF")
     
-    pdf.set_xy(140, 179)
+    pdf.set_xy(140, 184)
     pdf.multi_cell(0, 4, "Visceral Fat Ranges \nNormal:    1 - 9\nHigh:    10 - 14\nVery High:    15+")
     
-    pdf.set_xy(140, 217)
+    pdf.set_xy(140, 220)
     pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
     
     pdf.add_page() # Second page
@@ -535,9 +535,26 @@ def p055b(request, company_name=""):
     pdf.set_xy(130, 10)
     pdf.multi_cell(0, 7, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day required to \nmaintain vital body functions")
     
-    pdf.set_xy(130, 230)
-    pdf.multi_cell(0, 5, f"Very Light Activity: {int(request.test.test_energy.very_light_activity)} Calories/Day\nLight Activity: {int(request.test.test_energy.light_activity)} Calories/Day\nModerate Activity: {int(request.test.test_energy.moderate_activity)} Calories/Day\nHeavy Activity: {int(request.test.test_energy.heavy_activity)} Calories/Day\nVery Heavy Activity: {int(request.test.test_energy.very_heavy_activity)} Calories/Day")
-    
+    pdf.set_xy(120, 230)
+
+    activity_names = [
+        "Very Light Activity", "Light Activity", "Moderate Activity", 
+        "Heavy Activity", "Very Heavy Activity"
+    ]
+    activity_values = [
+        request.test.test_energy.very_light_activity, 
+        request.test.test_energy.light_activity,
+        request.test.test_energy.moderate_activity, 
+        request.test.test_energy.heavy_activity, 
+        request.test.test_energy.very_heavy_activity
+    ]
+
+    for name, value in zip(activity_names, activity_values):
+        pdf.cell(25, 5, f"{name}:", border=0, align='L')
+        pdf.set_xy(pdf.get_x() + 20, pdf.get_y())
+        pdf.cell(25, 5, f"{int(value)} Calories/Day", border=0, align='R')
+        pdf.set_xy(120, pdf.get_y() + 5)
+
     pdf.add_page() # Fourth page
     
     pdf.set_xy(60, 90)
