@@ -10,7 +10,7 @@ from reportlab.lib.units import cm
 import win32print, io, os # type: ignore
 from typing import Optional
 from fpdf import FPDF
-from pypdf import PdfWriter
+from PyPDF2 import PdfWriter
 
 from sql_data.config import SessionLocal
 from sql_data.schemas.tests_primary import TestResponse
@@ -64,12 +64,12 @@ def print_doc(request: PrintRequest, db: Session = Depends(get_db)):
         from_field_value = from_field_value.split()[0]
     
     if request.printout == 1:
-        pdf_bytes = plain_summary(request, operator_settings.company_name)
+        pdf_bytes = custom_summary(request, operator_settings.company_name)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"plainSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 2 or request.printout == 3:
-        pdf_bytes = combine_pdf(p055b(request, operator_settings.company_name), plain_summary(request, operator_settings.company_name))
+        pdf_bytes = combine_pdf(p055b(request, operator_settings.company_name), custom_summary(request, operator_settings.company_name))
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"p055b_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
@@ -84,7 +84,7 @@ def print_doc(request: PrintRequest, db: Session = Depends(get_db)):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"p511a_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
     elif request.printout == 6 and request.includes:
-        pdf_bytes = custom_summary(request, operator_settings.company_name)
+        pdf_bytes = custom_summary(request, operator_settings.company_name, False)
         if not isinstance(pdf_bytes, bytes):
             raise Exception("Error generating PDF: output is not bytes")
         temp_file_path = f"customSummary_{from_field_value}_{request.test.test_primary.creation_date.strftime('%Y-%m-%d')}.pdf"
@@ -134,139 +134,7 @@ def print_doc(request: PrintRequest, db: Session = Depends(get_db)):
 def pounds_to_kg(pounds: float) -> float:
     return round(pounds * 0.453592, 2)
 
-def plain_summary(request, company_name=""):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    story = []
-    styles = getSampleStyleSheet()
-    gender = "M" if request.test.test_primary.gender == 0 else "F"
-    parts = request.test.test_primary.height.split(" ")
-    formatted_height = f"{parts[0]} {parts[1]}\n{parts[2][:-2]} cm"
-    
-    styles.add(ParagraphStyle(
-        name='CompanyName',
-        fontName='Helvetica-Bold',
-        fontSize=12,               
-        textColor=colors.black,    
-        alignment=1,               
-        spaceAfter=12              
-    ))
-    
-    # Title
-    title_data = [
-        ["", f"Date: {request.test.test_primary.creation_date.strftime('%Y-%m-%d')}"]
-    ]
-    title_table = Table(title_data, colWidths=[400, 100])
-    title_table.setStyle(TableStyle([
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-    ]))
-
-    story.append(Spacer(1, -1 * cm))
-    story.append(title_table)
-    story.append(Paragraph(f"BODY COMPOSITION REPORT", styles['Title']))
-    story.append(Paragraph(f"{company_name}", styles['CompanyName']))
-    story.append(Spacer(1, 12))
-
-    # Info general
-    info_data = [
-        [f"Name: {request.test.test_primary.from_field}", f"Prepared By: {request.test.test_primary.by_field}"],
-        [f"Gender: {gender}", f"Age: {request.test.test_primary.age}"],
-        [f"Height: ", f"{formatted_height}"],
-        ["Current body weight:", f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg"],
-        ["Total Body Fat:", f"{round(request.test.test_primary.body_fat, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %"],
-        ["Visceral Fat:", int(request.test.test_primary.visceral_fat)],
-        ["Muscle Mass:", f"{round(request.test.test_primary.muscle_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg"],
-        ["Fat Free Mass:", f"{round(request.test.test_primary.lean_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.lean_mass), 1)} Kg\n{round(request.test.test_primary.lean_mass_percent, 1)} %"],
-        ["Total body Water:", f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %"],
-        ["BMI:", round(request.test.test_primary.bmi, 1)],
-        ["Ohms: ", int(request.test.test_primary.bio_impedance)],
-    ]
-    
-    # Create the info table
-    info_table = Table(info_data, colWidths=[200, 180])
-    info_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-        ('ALIGN', (1, 2), (-1, -1), 'RIGHT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('GRID', (0, 0), (-1, -1), 1, colors.white),
-        ('LINEBELOW', (0, 2), (-1, 2), 1, colors.black),
-        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.black)
-    ]))
-    story.append(info_table)
-    story.append(Spacer(1, 12))
-
-    # Body Fat Displacement
-    segmental_data = [
-        ["Body Fat Displacement", "", "", ""],
-        ["Torso", f"{round(request.test.test_segmental.torso, 1)} Lbs", f"{round(pounds_to_kg(request.test.test_segmental.torso), 1)} Kg", f"{round(request.test.test_segmental.torso_percent, 1)} %"],
-        ["Right Arm", f"{round(request.test.test_segmental.right_arm, 1)} Lbs", f"{round(pounds_to_kg(request.test.test_segmental.right_arm), 1)} Kg", f"{round(request.test.test_segmental.right_arm_percent, 1)} %"],
-        ["Left Arm", f"{round(request.test.test_segmental.left_arm, 1)} Lbs", f"{round(pounds_to_kg(request.test.test_segmental.left_arm), 1)} Kg", f"{round(request.test.test_segmental.left_arm_percent, 1)} %"],
-        ["Right Leg", f"{round(request.test.test_segmental.right_leg, 1)} Lbs", f"{round(pounds_to_kg(request.test.test_segmental.right_leg), 1)} Kg", f"{round(request.test.test_segmental.right_leg_percent, 1)} %"],
-        ["Left Leg", f"{round(request.test.test_segmental.left_leg, 1)} Lbs", f"{round(pounds_to_kg(request.test.test_segmental.left_leg), 1)} Kg", f"{round(request.test.test_segmental.left_leg_percent, 1)} %"],
-    ]
-
-    segmental_table = Table(segmental_data, colWidths=[200, 60, 60, 60])
-    segmental_table.setStyle(TableStyle([
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('GRID', (0, 0), (-1, -1), 1, colors.white),
-        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.black)
-    ]))
-    story.append(segmental_table)
-    story.append(Spacer(1, 12))
-    
-    basal_data = [
-        ["Basal Metabolic Rate:", f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day"],
-    ]
-
-    basal_table = Table(basal_data, colWidths=[200, 180])
-    
-    basal_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.white)
-    ]))
-    story.append(basal_table)
-    story.append(Spacer(1, 12))
-    
-    # Basal Metabolic Rate
-    bmr_data = [
-        ["Activity Level", "Daily Caloric Needs"],
-        ["Very light activity:", f"{int(request.test.test_energy.very_light_activity)} Calories/Day"],
-        ["Light activity:", f"{int(request.test.test_energy.light_activity)} Calories/Day"],
-        ["Moderate activity:", f"{int(request.test.test_energy.moderate_activity)} Calories/Day"],
-        ["Heavy activity:", f"{int(request.test.test_energy.heavy_activity)} Calories/Day"],
-        ["Very heavy activity:", f"{int(request.test.test_energy.very_heavy_activity)} Calories/Day"]
-    ]
-
-    bmr_table = Table(bmr_data, colWidths=[200, 180])
-    bmr_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.white)
-    ]))
-    story.append(bmr_table)
-    
-    doc.build(story)
-    pdf_bytes = buffer.getvalue()
-    
-    return pdf_bytes
-
-def custom_summary(request, company_name=""):
+def custom_summary(request, company_name="", include_all=True):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
@@ -308,21 +176,21 @@ def custom_summary(request, company_name=""):
         [f"Height: ", f"{formatted_height}"],
     ]
     
-    if request.includes.weight:
+    if include_all or request.includes.weight:
         info_data.append(["Current body weight:", f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg"])
-    if request.includes.body_fat:
+    if include_all or request.includes.body_fat:
         info_data.append(["Total Body Fat:", f"{round(request.test.test_primary.body_fat, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %"])
-    if request.includes.visceral_fat:
+    if include_all or request.includes.visceral_fat:
         info_data.append(["Visceral Fat:", int(request.test.test_primary.visceral_fat)])
-    if request.includes.muscle_mass:
+    if include_all or request.includes.muscle_mass:
         info_data.append(["Muscle Mass:", f"{round(request.test.test_primary.muscle_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg"])
-    if request.includes.lean_mass:
+    if include_all or request.includes.lean_mass:
         info_data.append(["Fat Free Mass:", f"{round(request.test.test_primary.lean_mass, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.lean_mass), 1)} Kg\n{round(request.test.test_primary.lean_mass_percent, 1)} %"])
-    if request.includes.body_water:
+    if include_all or request.includes.body_water:
         info_data.append(["Total body Water:", f"{round(request.test.test_primary.body_water, 1)} lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %"])
-    if request.includes.bmi:
+    if include_all or request.includes.bmi:
         info_data.append(["BMI:", round(request.test.test_primary.bmi, 1)])
-    if request.includes.bio_impedance:
+    if include_all or request.includes.bio_impedance:
         info_data.append(["Ohms: ", round(request.test.test_primary.bio_impedance, 1)])
     
     # Create the info table
@@ -343,7 +211,7 @@ def custom_summary(request, company_name=""):
     story.append(Spacer(1, 12))
 
     # Body Fat Displacement
-    if request.includes and request.includes.segmental_section:
+    if include_all or request.includes and request.includes.segmental_section:
         total_fat = request.test.test_primary.body_fat
         segmental_data = [
             ["Body Fat Displacement", "", "", ""],
@@ -368,7 +236,7 @@ def custom_summary(request, company_name=""):
         story.append(Spacer(1, 12))
         
         # Basal Metabolic Rate
-        if request.includes.basal_metabolic_rate:
+        if include_all or request.includes.basal_metabolic_rate:
             basal_data = [
                 ["Basal Metabolic Rate:", f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day"],
             ]
@@ -386,7 +254,7 @@ def custom_summary(request, company_name=""):
 
 
     # Activity Section
-    if request.includes and request.includes.activity_section:
+    if include_all or request.includes and request.includes.activity_section:
         bmr_data = [
             ["Activity Level", "Daily Caloric Needs"],
             ["Very light activity:", f"{int(request.test.test_energy.very_light_activity)} Calories/Day"],
@@ -507,7 +375,7 @@ def p111a(request):
     pdf.cell(40, 4, f"Heavy {int(request.test.test_energy.heavy_activity)} Calories/Day")
     
     # pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
-    pdf_bytes = pdf.output(dest='S')
+    pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
 
 def p511a(request):
@@ -602,7 +470,7 @@ def p511a(request):
     pdf.cell(40, 5, f"Heavy: {int(request.test.test_energy.heavy_activity)} Calories/Day")
     
     # pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
-    pdf_bytes = pdf.output(dest='S')
+    pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
 
 def p055b(request, company_name=""):
@@ -676,7 +544,7 @@ def p055b(request, company_name=""):
     pdf.cell(40, 10, f"You are {round(request.test.test_primary.aiw, 1)}% over your ideal weight.")
     
     # pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
-    pdf_bytes = pdf.output(dest='S')
+    pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
 
 def combine_pdf(pdf1: bytes, pdf2: bytes) -> bytes:
