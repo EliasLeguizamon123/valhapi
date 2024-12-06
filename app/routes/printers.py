@@ -281,99 +281,166 @@ def custom_summary(request, company_name="", include_all=True):
 
     return pdf_bytes
 
+def add_segment_row(pdf, title, value_lbs, value_kg, value_percent, 
+                    x_title=65, y_pos=130):
+    # Title column
+    pdf.set_xy(x_title, y_pos)
+    pdf.cell(40, 5, f"{title}: ", align='L')
+    # Data columns
+    pdf.set_xy(x_title + 15, y_pos)
+    pdf.cell(20, 5, f"{round(value_lbs, 1)} Lbs", align='R')
+    pdf.set_xy(x_title + 30, y_pos)
+    pdf.cell(20, 5, f"{round(value_kg, 1)} Kg", align='R')
+    pdf.set_xy(x_title + 45, y_pos)
+    pdf.cell(20, 5, f"{round(value_percent, 1)} %", align='R')
+
+def add_aligned_value(pdf, x_num, x_unit, y_pos, value, unit, row_spacing=7):
+    """
+    Adds a number and its unit in aligned columns.
+    
+    Args:
+        pdf: The PDF object.
+        x_num: X-coordinate for the number (right-aligned).
+        x_unit: X-coordinate for the unit (left-aligned).
+        y_pos: Y-coordinate for the row.
+        value: The numeric value to display.
+        unit: The unit to display (e.g., "Lbs", "Kg").
+        row_spacing: Spacing between rows for multi-line content.
+    """
+    pdf.set_xy(x_num, y_pos)
+    pdf.cell(15, 5, f"{round(value, 1)}", align='R')  # Number right-aligned
+    pdf.set_xy(x_unit, y_pos)
+    pdf.cell(15, 5, unit, align='L')  # Unit left-aligned
+
 def p111a(request):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='letter')
     pdf.add_page()
 
     pdf.set_font("Helvetica", size=10)
 
     pdf.set_text_color(0, 0, 0)  # Black in RGB
     
-    pdf.set_xy(30, 20)
+    pdf.set_xy(30, 25)
     pdf.cell(40, 10, f"{request.test.test_primary.from_field}")
     
-    pdf.set_xy(30, 36)
+    pdf.set_xy(30, 37)
     pdf.cell(40, 10, f"{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
     
-    pdf.set_xy(23, 50)
+    pdf.set_xy(23, 55)
     pdf.cell(40, 10, f"{gender}")
     
-    pdf.set_xy(37, 50)
+    pdf.set_xy(37, 55)
     pdf.cell(40, 10, f"{request.test.test_primary.age}")
     
-    pdf.set_xy(50, 50)
+    pdf.set_xy(50, 55)
     pdf.cell(40, 10, f"{request.test.test_primary.height}")
     
-    pdf.set_xy(23, 55)
+    pdf.set_xy(23, 60)
     pdf.cell(40, 10, f"Ohms: {int(request.test.test_primary.bio_impedance)}")
     
-    pdf.set_xy(105, 40)
-    pdf.multi_cell(0, 7, f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
-    
-    pdf.set_xy(105, 72)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %")
+    # Weight
+    y_start = 40
+    add_aligned_value(pdf, 100, 115, y_start, request.test.test_primary.weight, "Lbs")
+    add_aligned_value(pdf, 100, 115, y_start + 5, pounds_to_kg(request.test.test_primary.weight), "Kg")
 
-    pdf.set_xy(105, 130)
+    # Body Fat
+    y_start = 72
+    add_aligned_value(pdf, 100, 115, y_start, request.test.test_primary.body_fat, "Lbs")
+    add_aligned_value(pdf, 100, 115, y_start + 5, pounds_to_kg(request.test.test_primary.body_fat), "Kg")
+    add_aligned_value(pdf, 100, 115, y_start + 10, request.test.test_primary.body_fat_percent, "%")
+
+    # Visceral Fat
+    pdf.set_xy(110, 130)
     pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)}")
 
+    # BMI
     pdf.set_xy(145, 42)
     pdf.cell(40, 10, f"{round(request.test.test_primary.bmi, 1)}")
-    
-    pdf.set_xy(145, 72)
-    pdf.multi_cell(0, 7, f"{round(request.test.test_primary.muscle_mass, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg")
-    
-    pdf.set_xy(180, 72)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
-    
-    # Torso
-    pdf.set_xy(135, 130)  # Parte izquierda (título)
-    pdf.cell(40, 5, "Torso: ", align='L')
 
-    pdf.set_xy(155, 130)  # Parte derecha (Lbs, Kg, y %)
-    pdf.cell(0, 5, f"{round(request.test.test_segmental.torso, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.torso), 1)} Kg  {round(request.test.test_segmental.torso_percent, 1)} %")
+    # Muscle Mass
+    y_start = 72
+    add_aligned_value(pdf, 140, 155, y_start, request.test.test_primary.muscle_mass, "Lbs")
+    add_aligned_value(pdf, 140, 155, y_start + 5, pounds_to_kg(request.test.test_primary.muscle_mass), "Kg")
+
+    # Body Water
+    y_start = 72
+    add_aligned_value(pdf, 170, 185, y_start, request.test.test_primary.body_water, "Lbs")
+    add_aligned_value(pdf, 170, 185, y_start + 5, pounds_to_kg(request.test.test_primary.body_water), "Kg")
+    add_aligned_value(pdf, 170, 185, y_start + 10, request.test.test_primary.body_water_percent, "%")
+    
+    y_start = 130
+    row_spacing = 5
+
+    # Torso
+    add_segment_row(
+        pdf, "Torso", 
+        request.test.test_segmental.torso,
+        pounds_to_kg(request.test.test_segmental.torso),
+        request.test.test_segmental.torso_percent,
+        x_title=135,
+        y_pos=y_start
+    )
 
     # Left Leg
-    pdf.set_xy(135, 135)  # Parte izquierda (título)
-    pdf.cell(40, 5, "Left Leg: ", align='L')
-
-    pdf.set_xy(155, 135)  # Parte derecha (Lbs, Kg, y %)
-    pdf.cell(0, 5, f"{round(request.test.test_segmental.left_leg, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.left_leg), 1)} Kg  {round(request.test.test_segmental.left_leg_percent, 1)} %")
+    add_segment_row(
+        pdf, "Left Leg", 
+        request.test.test_segmental.left_leg,
+        pounds_to_kg(request.test.test_segmental.left_leg),
+        request.test.test_segmental.left_leg_percent,
+        x_title=135,
+        y_pos=y_start + row_spacing
+    )
 
     # Right Leg
-    pdf.set_xy(135, 140)  # Parte izquierda (título)
-    pdf.cell(40, 5, "Right Leg: ", align='L')
-
-    pdf.set_xy(155, 140)  # Parte derecha (Lbs, Kg, y %)
-    pdf.cell(0, 5, f"{round(request.test.test_segmental.right_leg, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.right_leg), 1)} Kg  {round(request.test.test_segmental.right_leg_percent, 1)} %")
+    add_segment_row(
+        pdf, "Right Leg", 
+        request.test.test_segmental.right_leg,
+        pounds_to_kg(request.test.test_segmental.right_leg),
+        request.test.test_segmental.right_leg_percent,
+        x_title=135,
+        y_pos=y_start + 2 * row_spacing
+    )
 
     # Left Arm
-    pdf.set_xy(135, 145)  # Parte izquierda (título)
-    pdf.cell(40, 5, "Left Arm: ", align='L')
-
-    pdf.set_xy(155, 145)  # Parte derecha (Lbs, Kg, y %)
-    pdf.cell(0, 5, f"{round(request.test.test_segmental.left_arm, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.left_arm), 1)} Kg  {round(request.test.test_segmental.left_arm_percent, 1)} %")
+    add_segment_row(
+        pdf, "Left Arm", 
+        request.test.test_segmental.left_arm,
+        pounds_to_kg(request.test.test_segmental.left_arm),
+        request.test.test_segmental.left_arm_percent,
+        x_title=135,
+        y_pos=y_start + 3 * row_spacing
+    )
 
     # Right Arm
-    pdf.set_xy(135, 150)  # Parte izquierda (título)
-    pdf.cell(40, 5, "Right Arm: ", align='L')
-
-    pdf.set_xy(155, 150)  # Parte derecha (Lbs, Kg, y %)
-    pdf.cell(0, 5, f"{round(request.test.test_segmental.right_arm, 1)} Lbs  {round(pounds_to_kg(request.test.test_segmental.right_arm), 1)} Kg  {round(request.test.test_segmental.right_arm_percent, 1)} %")
-
+    add_segment_row(
+        pdf, "Right Arm", 
+        request.test.test_segmental.right_arm,
+        pounds_to_kg(request.test.test_segmental.right_arm),
+        request.test.test_segmental.right_arm_percent,
+        x_title=135,
+        y_pos=y_start + 4 * row_spacing
+    )
 
     pdf.set_xy(103, 195)
     pdf.cell(40, 10, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day")
     
     pdf.set_xy(145, 195)
-    pdf.cell(40, 4, f"Light {int(request.test.test_energy.light_activity)} Calories/Day")
-    
-    pdf.set_xy(145, 199)
-    pdf.cell(40, 4, f"Moderate {int(request.test.test_energy.moderate_activity)} Calories/Day")
-    
-    pdf.set_xy(145, 203)
-    pdf.cell(40, 4, f"Heavy {int(request.test.test_energy.heavy_activity)} Calories/Day")
-    
+    activity_names = [
+        "Light", "Moderate", "Heavy"
+    ]
+    activity_values = [
+        request.test.test_energy.light_activity,
+        request.test.test_energy.moderate_activity, 
+        request.test.test_energy.heavy_activity, 
+    ]
+
+    for name, value in zip(activity_names, activity_values):
+        pdf.cell(25, 5, f"{name}:", border=0, align='L')
+        pdf.set_xy(pdf.get_x() + 5, pdf.get_y())
+        pdf.cell(25, 5, f"{int(value)} Calories/Day", border=0, align='R')
+        pdf.set_xy(145, pdf.get_y() + 5)
+
     # pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
     pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
@@ -382,7 +449,7 @@ def p511a(request):
     gender = "M" if request.test.test_primary.gender == 0 else "F"
     parts = request.test.test_primary.height.split(" ")
     formatted_height = f"{parts[0]} {parts[1]}\n{parts[2][:-2]} cm"
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='letter')
     pdf.add_page()
     pdf.set_font("Helvetica", size=10)
     pdf.set_text_color(0, 0, 0)
@@ -397,9 +464,11 @@ def p511a(request):
     pdf.set_xy(110, 23)
     pdf.cell(40, 10, f"{request.test.test_primary.creation_date.strftime('%Y/%m/%d')}")
     
-    pdf.set_xy(10, 57)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.weight, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.weight), 1)} Kg")
-    
+    # Weight
+    y_start = 57
+    add_aligned_value(pdf, 5, 20, y_start, request.test.test_primary.weight, "Lbs")
+    add_aligned_value(pdf, 5, 20, y_start + 5, pounds_to_kg(request.test.test_primary.weight), "Kg")
+
     pdf.set_xy(40, 57)
     pdf.multi_cell(0, 5, f"{formatted_height}")
     
@@ -415,60 +484,92 @@ def p511a(request):
     pdf.set_xy(120, 57)
     pdf.cell(40, 10, f"{round(request.test.test_primary.bmi, 1)}")
     
-    pdf.set_xy(10, 97)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_fat, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_fat), 1)} Kg\n{round(request.test.test_primary.body_fat_percent, 1)} %")
+    # Body Fat
+    y_start = 97
+    add_aligned_value(pdf, 5, 20, y_start, request.test.test_primary.body_fat, "Lbs")
+    add_aligned_value(pdf, 5, 20, y_start + 5, pounds_to_kg(request.test.test_primary.body_fat), "Kg")
+    add_aligned_value(pdf, 5, 20, y_start + 10, request.test.test_primary.body_fat_percent, "%")
     
-    pdf.set_xy(65, 97)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.muscle_mass, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.muscle_mass), 1)} Kg")
+    # Muscle Mass
+    add_aligned_value(pdf, 60, 75, y_start, request.test.test_primary.muscle_mass, "Lbs")
+    add_aligned_value(pdf, 60, 75, y_start + 5, pounds_to_kg(request.test.test_primary.muscle_mass), "Kg")
+
+    # Body Water
+    add_aligned_value(pdf, 100, 115, y_start, request.test.test_primary.body_water, "Lbs")
+    add_aligned_value(pdf, 100, 115, y_start + 5, pounds_to_kg(request.test.test_primary.body_water), "Kg")
+    add_aligned_value(pdf, 100, 115, y_start + 10, request.test.test_primary.body_water_percent, "%")
     
-    pdf.set_xy(105, 97)
-    pdf.multi_cell(0, 5, f"{round(request.test.test_primary.body_water, 1)} Lbs\n{round(pounds_to_kg(request.test.test_primary.body_water), 1)} Kg\n{round(request.test.test_primary.body_water_percent, 1)} %")
     
     pdf.set_xy(20, 130)
     pdf.cell(40, 10, f"{int(request.test.test_primary.visceral_fat)}")
     
+    y_start = 130
+    row_spacing = 5
+
     # Torso
-    pdf.set_xy(65, 130)
-    pdf.cell(40, 5, f"Torso: ", align='L')  
-    
-    pdf.set_xy(90, 130)
-    pdf.cell(40, 5, f"{round(request.test.test_segmental.torso, 1)} Lbs   {round(pounds_to_kg(request.test.test_segmental.torso), 1)} Kg    {round(request.test.test_segmental.torso_percent, 1)} %", align='R')  # Parte derecha (Kg y %)
+    add_segment_row(
+        pdf, "Torso", 
+        request.test.test_segmental.torso,
+        pounds_to_kg(request.test.test_segmental.torso),
+        request.test.test_segmental.torso_percent,
+        y_pos=y_start
+    )
 
     # Left Leg
-    pdf.set_xy(65, 135)
-    pdf.cell(40, 5, f"Left Leg: ", align='L')  
-    pdf.set_xy(90, 135)
-    pdf.cell(40, 5, f"{round(request.test.test_segmental.left_leg, 1)} Lbs   {round(pounds_to_kg(request.test.test_segmental.left_leg), 1)} Kg    {round(request.test.test_segmental.left_leg_percent, 1)} %", align='R')  # Parte derecha (Kg y %)
+    add_segment_row(
+        pdf, "Left Leg", 
+        request.test.test_segmental.left_leg,
+        pounds_to_kg(request.test.test_segmental.left_leg),
+        request.test.test_segmental.left_leg_percent,
+        y_pos=y_start + row_spacing
+    )
 
     # Right Leg
-    pdf.set_xy(65, 140)
-    pdf.cell(40, 5, f"Right Leg: ", align='L')  
-    pdf.set_xy(90, 140)
-    pdf.cell(40, 5, f"{round(request.test.test_segmental.right_leg, 1)} Lbs   {round(pounds_to_kg(request.test.test_segmental.right_leg), 1)} Kg    {round(request.test.test_segmental.right_leg_percent, 1)} %", align='R')  # Parte derecha (Kg y %)
+    add_segment_row(
+        pdf, "Right Leg", 
+        request.test.test_segmental.right_leg,
+        pounds_to_kg(request.test.test_segmental.right_leg),
+        request.test.test_segmental.right_leg_percent,
+        y_pos=y_start + 2 * row_spacing
+    )
 
     # Left Arm
-    pdf.set_xy(65, 145)
-    pdf.cell(40, 5, f"Left Arm: ", align='L')  
-    pdf.set_xy(90, 145)
-    pdf.cell(40, 5, f"{round(request.test.test_segmental.left_arm, 1)} Lbs   {round(pounds_to_kg(request.test.test_segmental.left_arm), 1)} Kg    {round(request.test.test_segmental.left_arm_percent, 1)} %", align='R')  # Parte derecha (Kg y %)
+    add_segment_row(
+        pdf, "Left Arm", 
+        request.test.test_segmental.left_arm,
+        pounds_to_kg(request.test.test_segmental.left_arm),
+        request.test.test_segmental.left_arm_percent,
+        y_pos=y_start + 3 * row_spacing
+    )
 
     # Right Arm
-    pdf.set_xy(65, 150)
-    pdf.cell(40, 5, f"Right Arm: ", align='L')  
-    pdf.set_xy(90, 150)
-    pdf.cell(40, 5, f"{round(request.test.test_segmental.right_arm, 1)} Lbs   {round(pounds_to_kg(request.test.test_segmental.right_arm), 1)} Kg    {round(request.test.test_segmental.right_arm_percent, 1)} %", align='R')  # Parte derecha (Kg y %)
-
+    add_segment_row(
+        pdf, "Right Arm", 
+        request.test.test_segmental.right_arm,
+        pounds_to_kg(request.test.test_segmental.right_arm),
+        request.test.test_segmental.right_arm_percent,
+        y_pos=y_start + 4 * row_spacing
+    )
     
     pdf.set_xy(20, 177)
-    pdf.cell(40, 10, f"{request.test.test_energy.basal_metabolic_rate} Calories/Day")
+    pdf.cell(40, 10, f"{int(request.test.test_energy.basal_metabolic_rate)} Calories/Day")
     
     pdf.set_xy(65, 180)
-    pdf.cell(40, 5, f"Light: {int(request.test.test_energy.light_activity)} Calories/Day")
-    pdf.set_xy(65, 185)
-    pdf.cell(40, 5, f"Moderate: {int(request.test.test_energy.moderate_activity)} Calories/Day")
-    pdf.set_xy(65, 190)
-    pdf.cell(40, 5, f"Heavy: {int(request.test.test_energy.heavy_activity)} Calories/Day")
-    
+    activity_names = [
+        "Light", "Moderate", "Heavy"
+    ]
+    activity_values = [
+        request.test.test_energy.light_activity,
+        request.test.test_energy.moderate_activity, 
+        request.test.test_energy.heavy_activity, 
+    ]
+
+    for name, value in zip(activity_names, activity_values):
+        pdf.cell(25, 5, f"{name}:", border=0, align='L')
+        pdf.set_xy(pdf.get_x() + 7, pdf.get_y())
+        pdf.cell(25, 5, f"{int(value)} Calories/Day", border=0, align='R')
+        pdf.set_xy(65, pdf.get_y() + 5)
+
     # pdf_bytes = bytes(pdf.output(dest='S').encode('latin-1'))
     pdf_bytes = bytes(pdf.output(dest='S'))
     return pdf_bytes
